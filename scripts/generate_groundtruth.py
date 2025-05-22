@@ -61,6 +61,15 @@ def main():
 
     os.makedirs(os.path.dirname(args.output_file), exist_ok=True)
     questions_df = pd.read_csv(args.questions_csv, sep=";")
+    
+    # Фильтрация: исключаем "Материалы из сообщества"
+    if 'rubrics' in questions_df.columns:
+        initial_count = len(questions_df)
+        questions_df = questions_df[questions_df['rubrics'] != 'Материалы из сообщества']
+        filtered_count = len(questions_df)
+        print(f"Исключены записи с рубрикой 'Материалы из сообщества': {initial_count} -> {filtered_count} ({initial_count - filtered_count} удалено)")
+    else:
+        print("Предупреждение: поле 'rubrics' не найдено в данных")
 
     dataset = create_synthetic_dataset(
         questions_df, 
