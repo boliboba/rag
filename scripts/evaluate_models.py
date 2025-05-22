@@ -51,12 +51,7 @@ MODELS_TO_EVALUATE = [
     "google/gemma-3-27b-it",
     "google/gemma-3-12b-it",
     "meta-llama/llama-3.1-405b-instruct",
-    "meta-llama/llama-3.3-70b-instruct",
-    "anthropic/claude-3.5-sonnet",
-    "openai/gpt-4o",
-    "google/gemini-1.5-pro",
-    "mistralai/mistral-large-2407",
-    "microsoft/wizardlm-2-8x22b"
+    "meta-llama/llama-3.3-70b-instruct"
 ]
 
 # Фиксированная температура
