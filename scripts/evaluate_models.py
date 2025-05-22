@@ -44,14 +44,14 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация для оценки - список моделей
 MODELS_TO_EVALUATE = [
-    "google/gemini-2.5-flash-preview-05-20",
-    "qwen/qwen3-235b-a22b", 
-    "qwen/qwen3-32b", 
-    "qwen/qwen3-14b",
-    "google/gemma-3-27b-it",
+    # "google/gemini-2.5-flash-preview-05-20",
+    # "qwen/qwen3-235b-a22b", 
+    # "qwen/qwen3-32b", 
+    # "qwen/qwen3-14b",
+    # "google/gemma-3-27b-it",
     "google/gemma-3-12b-it",
-    "meta-llama/llama-3.1-405b-instruct",
-    "meta-llama/llama-3.3-70b-instruct"
+    # "meta-llama/llama-3.1-405b-instruct",
+    # "meta-llama/llama-3.3-70b-instruct"
 ]
 
 # Фиксированная температура
