@@ -1,7 +1,5 @@
 import torch
 import gc
-import signal
-import time
 from contextlib import contextmanager
 from FlagEmbedding import FlagLLMReranker
 
@@ -20,34 +18,7 @@ def gpu_memory_manager():
             torch.cuda.empty_cache()
         gc.collect()
 
-def timeout_handler(signum, frame):
-    """Обработчик таймаута"""
-    raise TimeoutError("Реранкер превысил максимальное время выполнения")
 
-def rerank_with_timeout(reranker, pairs, timeout_seconds=30):
-    """Выполняет реранжирование с таймаутом"""
-    # Устанавливаем сигнал для таймаута (только на Unix системах)
-    try:
-        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(timeout_seconds)
-        
-        start_time = time.time()
-        scores = reranker.compute_score(pairs)
-        elapsed = time.time() - start_time
-        
-        signal.alarm(0)  # Отключаем таймаут
-        signal.signal(signal.SIGALRM, old_handler)  # Восстанавливаем обработчик
-        
-        print(f"⏱️ Реранжирование заняло {elapsed:.2f} секунд")
-        return scores
-        
-    except (AttributeError, OSError):
-        # Windows или система без поддержки сигналов - простое выполнение
-        start_time = time.time()
-        scores = reranker.compute_score(pairs)
-        elapsed = time.time() - start_time
-        print(f"⏱️ Реранжирование заняло {elapsed:.2f} секунд")
-        return scores
 
 @lazy_singleton
 def get_reranker():
@@ -121,7 +92,7 @@ def rerank_documents(query, docs, reranker=None, top_k=None):
                     print(f"  Документ {i+1}: {len(content)} символов")
             
             print(f"🚀 Отправляем {len(pairs)} пар на реранжирование...")
-            scores = rerank_with_timeout(reranker, pairs, timeout_seconds=60)
+            scores = reranker.compute_score(pairs)
             print(f"✅ Получены скоры для {len(scores)} документов")
             
             scored_docs = list(zip(docs, scores))
