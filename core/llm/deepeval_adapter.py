@@ -10,7 +10,7 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
         model_name=None, 
         api_base=None,
         temperature=0.0,
-        max_tokens=2000
+        max_tokens=10000
     ):
         # Создаем экземпляр LangChain модели
         self.llm = ChatOpenRouter(
