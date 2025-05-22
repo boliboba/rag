@@ -88,12 +88,8 @@ def precompute_documents_for_all_questions(dataset, limit=None):
             reranked_docs = rerank(question, docs)
             print(f"Реранжировано чанков: {len(reranked_docs)}")
             
-            # Берём топ-5 реранжированных документов (вместо случайных)
-            selected_docs = reranked_docs[:5] if len(reranked_docs) > 5 else reranked_docs
-            print(f"Выбрано {len(selected_docs)} лучших документов")
-            
             # Форматируем контекст
-            formatted_context = format_docs(selected_docs)
+            formatted_context = format_docs(reranked_docs)
             
             # Кэшируем результат
             _document_cache[question] = formatted_context
