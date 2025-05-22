@@ -82,13 +82,15 @@ def precompute_documents_for_all_questions(dataset, limit=None):
         try:
             # Получаем документы из векторной базы
             docs = retrieve(question)
+            print(f"Найдено чанков: {len(docs)}")
             
-            # Выбираем 5 случайных документов для экономии памяти
-            import random
-            if len(docs) > 5:
-                selected_docs = random.sample(docs, 5)
-            else:
-                selected_docs = docs
+            # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
+            reranked_docs = rerank(question, docs)
+            print(f"Реранжировано чанков: {len(reranked_docs)}")
+            
+            # Берём топ-5 реранжированных документов (вместо случайных)
+            selected_docs = reranked_docs[:5] if len(reranked_docs) > 5 else reranked_docs
+            print(f"Выбрано {len(selected_docs)} лучших документов")
             
             # Форматируем контекст
             formatted_context = format_docs(selected_docs)
