@@ -45,7 +45,13 @@ logger = logging.getLogger(__name__)
 # Конфигурация для оценки - список моделей
 MODELS_TO_EVALUATE = [
     "google/gemma-3-12b-it",
-    "qwen/qwen3-32b"
+    "qwen/qwen3-32b",
+    "meta-llama/llama-3.3-70b-instruct",
+    "anthropic/claude-3.5-sonnet",
+    "openai/gpt-4o",
+    "google/gemini-1.5-pro",
+    "mistralai/mistral-large-2407",
+    "microsoft/wizardlm-2-8x22b"
 ]
 
 # Фиксированная температура
@@ -58,7 +64,7 @@ EVAL_MODEL_NAME = "google/gemini-2.5-flash-preview-05-20"
 TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 
 # Количество примеров для оценки (None для всего датасета)
-LIMIT = 3
+LIMIT = 120
 
 # Максимальное количество одновременно оцениваемых моделей
 MAX_CONCURRENCY = 6
@@ -130,7 +136,7 @@ def create_model_specific_chain(model_name):
     
     return rag_chain
 
-async def generate_system_responses_async(dataset, model_name, limit=None, max_concurrent_questions=3):
+async def generate_system_responses_async(dataset, model_name, limit=None, max_concurrent_questions=6):
     """Асинхронно генерирует ответы системы для заданной модели с параллельной обработкой вопросов"""
     if limit is not None and limit < len(dataset):
         # Используем тот же random_state=42 для согласованности с create_test_cases
@@ -191,7 +197,7 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         dataset=dataset,
         model_name=model_name,
         limit=limit,
-        max_concurrent_questions=3  # Параллельная обработка 3 вопросов на модель
+        max_concurrent_questions=6  # Параллельная обработка 6 вопросов на модель
     )
     
     # Сохраняем сырые ответы
