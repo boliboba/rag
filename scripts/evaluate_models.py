@@ -84,12 +84,20 @@ def precompute_documents_for_all_questions(dataset, limit=None):
             docs = retrieve(question)
             print(f"Найдено чанков: {len(docs)}")
             
-            # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
-            reranked_docs = rerank(question, docs)
-            print(f"Реранжировано чанков: {len(reranked_docs)}")
+            # Проверяем настройку реранкера
+            from core.config import USE_RERANKER
+            if USE_RERANKER:
+                # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
+                reranked_docs = rerank(question, docs)
+                print(f"Реранжировано чанков: {len(reranked_docs)}")
+                final_docs = reranked_docs
+            else:
+                # Реранкер отключен - берём топ-5 без реранжирования
+                final_docs = docs[:5] if len(docs) > 5 else docs
+                print(f"Реранкер отключен - взято {len(final_docs)} документов без реранжирования")
             
             # Форматируем контекст
-            formatted_context = format_docs(reranked_docs)
+            formatted_context = format_docs(final_docs)
             
             # Кэшируем результат
             _document_cache[question] = formatted_context
