@@ -82,11 +82,11 @@ async def test_concurrent_ainvoke(models, concurrency=2):
     return await asyncio.gather(*tasks)
 
 async def main():
-    # Список моделей для тестирования
+    # Список моделей для тестирования с актуальными ID из OpenRouter
     models_to_test = [
-        "google/gemini-1.5-pro",
-        "anthropic/claude-3-haiku-20240307",
-        "meta-llama/llama-3-8b-instruct"
+        "meta-llama/llama-3-8b-instruct",
+        "meta-llama/llama-3-70b-instruct",
+        "google/gemma-3-12b-it"
     ]
     
     print("\n--- Тест 1: Последовательные вызовы ---")
