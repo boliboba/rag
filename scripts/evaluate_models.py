@@ -50,6 +50,9 @@ MODELS_TO_EVALUATE = [
 # Фиксированная температура
 TEMPERATURE = 0.0
 
+# Модель для проведения оценки (независимо от оцениваемой модели)
+EVAL_MODEL_NAME = "google/gemini-2.5-flash-preview-05-20"
+
 # Путь к тестовому датасету
 TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 
@@ -149,10 +152,12 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
     # Оцениваем результаты
     try:
         # Используем асинхронную версию оценки для ускорения
+        # Используем EVAL_MODEL_NAME для оценки всех моделей
+        logger.info(f"Используем {EVAL_MODEL_NAME} для оценки ответов модели {model_name}")
         evaluation_df = await evaluate_dataset_async(
             dataset=dataset,
             system_responses=system_responses,
-            model_name=model_name,
+            model_name=EVAL_MODEL_NAME,  # Используем одну и ту же модель для оценки
             temperature=TEMPERATURE,
             limit=limit,
             max_concurrency=4  # Лимит одновременных запросов к LLM для метрик
@@ -213,6 +218,7 @@ async def main():
     with open(output_dir / "config.json", "w") as f:
         json.dump({
             "models": MODELS_TO_EVALUATE,
+            "eval_model": EVAL_MODEL_NAME,
             "temperature": TEMPERATURE,
             "dataset": TEST_DATASET_PATH,
             "limit": LIMIT
