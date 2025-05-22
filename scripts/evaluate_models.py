@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
 
-from core.llm import get_llm, reset_llm_cache
+from core.llm import get_llm
 from core.db import get_vector_store
 from core.llm.chains import get_retrieval_chain, format_docs, retrieve, rerank
 from core.config import MODEL_NAME as DEFAULT_MODEL_NAME, PROMPTS
@@ -61,7 +61,7 @@ TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 LIMIT = 3
 
 # Максимальное количество одновременно оцениваемых моделей
-MAX_CONCURRENCY = 1
+MAX_CONCURRENCY = 6
 
 def create_model_specific_chain(model_name):
     """Создает специальную цепочку для конкретной модели без изменения глобальных настроек"""
@@ -73,9 +73,21 @@ def create_model_specific_chain(model_name):
     def retrieve_and_rerank(query):
         docs = retrieve(query)
         print(f"Найдено чанков: {len(docs)}")
-        reranked_docs = rerank(query, docs)
-        print(f"Реранжировано чанков: {len(reranked_docs)}")
-        return reranked_docs
+        # Реранкер временно отключен для экономии памяти
+        # reranked_docs = rerank(query, docs)
+        # print(f"Реранжировано чанков: {len(reranked_docs)}")
+        
+        # Выбираем 5 случайных документов для экономии памяти
+        import random
+        if len(docs) > 5:
+            selected_docs = random.sample(docs, 5)
+            print(f"Выбрано 5 случайных документов из {len(docs)}")
+        else:
+            selected_docs = docs
+            print(f"Используются все {len(docs)} документов")
+        
+        print("Реранкер отключен - используются исходные документы")
+        return selected_docs
     
     retrieval_fn = lambda query: format_docs(
         retrieve_and_rerank(query)
@@ -161,7 +173,7 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
             model_name=EVAL_MODEL_NAME,  # Используем одну и ту же модель для оценки
             temperature=TEMPERATURE,
             limit=limit,
-            max_concurrency=4  # Лимит одновременных запросов к LLM для метрик
+            max_concurrency=6  # Лимит одновременных запросов к LLM для метрик
         )
         
         # Генерируем отчет
@@ -177,8 +189,7 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         elapsed_time = time.time() - start_time
         logger.info(f"Оценка модели {model_name} завершена за {elapsed_time:.2f} секунд")
         
-        # Очистка кэша после завершения оценки модели
-        reset_llm_cache()
+
         
         return {
             "model": model_name,
