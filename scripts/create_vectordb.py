@@ -7,7 +7,7 @@ import argparse
 import pandas as pd
 from core.modules import preprocess_article, process_data_to_documents
 from core.db import create_vectorstore, save_vectorstore, get_embedding_model
-from core.config import EMBEDDING_MODEL
+from core.config import EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP
 from langchain.text_splitter import MarkdownTextSplitter
 
 
@@ -16,8 +16,8 @@ def parse_args():
     parser.add_argument("--input", type=str, required=True, help="Путь к входному CSV файлу с данными")
     parser.add_argument("--output", type=str, required=True, help="Путь к выходной директории для векторной БД")
     parser.add_argument("--embedding-model", type=str, default=EMBEDDING_MODEL, help="Модель для создания эмбеддингов")
-    parser.add_argument("--chunk-size", type=int, default=1024, help="Размер чанка при разбиении текста")
-    parser.add_argument("--chunk-overlap", type=int, default=20, help="Перекрытие чанков при разбиении текста")
+    parser.add_argument("--chunk-size", type=int, default=CHUNK_SIZE, help="Размер чанка при разбиении текста")
+    parser.add_argument("--chunk-overlap", type=int, default=CHUNK_OVERLAP, help="Перекрытие чанков при разбиении текста")
     return parser.parse_args()
 
 def main():
