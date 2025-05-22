@@ -44,7 +44,8 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация для оценки - список моделей
 MODELS_TO_EVALUATE = [
-    "google/gemma-3-12b-it"
+    "google/gemma-3-12b-it",
+    "qwen/qwen3-32b"
 ]
 
 # Фиксированная температура
