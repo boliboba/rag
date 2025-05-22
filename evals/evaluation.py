@@ -76,17 +76,27 @@ def create_test_cases(dataset, system_responses=None, limit=None):
     if limit is not None and limit < len(dataset):
         if system_responses is not None:
             # Сохраняем консистентность индексов при выборке
-            selected_indices = dataset.sample(limit).index
-            dataset = dataset.loc[selected_indices]
-            system_responses = system_responses.loc[selected_indices]
+            # Используем одинаковый random_state для воспроизводимости
+            dataset = dataset.sample(limit, random_state=42).reset_index(drop=True)
+            
+            # Если system_responses предоставлен извне, важно сбросить индексы
+            # чтобы они совпадали с индексами датасета
+            system_responses = system_responses.reset_index(drop=True)
+            
+            # Обеспечиваем, что размеры совпадают
+            if len(dataset) != len(system_responses):
+                min_len = min(len(dataset), len(system_responses))
+                dataset = dataset.iloc[:min_len]
+                system_responses = system_responses.iloc[:min_len]
         else:
-            dataset = dataset.sample(limit)
+            dataset = dataset.sample(limit, random_state=42).reset_index(drop=True)
     
     test_cases = []
     for i, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Создание тестовых случаев")):
         # Если есть ответы системы, используем их для actual_output
         if system_responses is not None:
-            actual_output = system_responses.iloc[i]["answer"] if "answer" in system_responses.columns else system_responses.iloc[i]
+            # Используем позиционный индекс вместо именованного
+            actual_output = system_responses.iloc[i]["system_answer"] if "system_answer" in system_responses.columns else system_responses.iloc[i]["answer"]
         else:
             # Иначе используем ответ из датасета и для actual_output, и для expected_output
             actual_output = row["answer"]

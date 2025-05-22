@@ -93,7 +93,8 @@ def create_model_specific_chain(model_name):
 async def generate_system_responses_async(dataset, model_name, limit=None):
     """Асинхронно генерирует ответы системы для заданной модели"""
     if limit is not None and limit < len(dataset):
-        dataset = dataset.sample(limit, random_state=42)
+        # Используем тот же random_state=42 для согласованности с create_test_cases
+        dataset = dataset.sample(limit, random_state=42).reset_index(drop=True)
     
     # Создаем специальную цепочку для этой модели
     retrieval_chain = create_model_specific_chain(model_name)
