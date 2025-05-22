@@ -25,6 +25,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 from evals.evaluation import (
     evaluate_dataset,
+    evaluate_dataset_async,
     generate_report,
     save_results,
     stop as stop_evaluation
@@ -43,9 +44,14 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация для оценки - список моделей
 MODELS_TO_EVALUATE = [
-    "google/gemini-1.5-pro",
-    # "anthropic/claude-3-opus-20240229",
-    # "meta-llama/llama-3-70b-instruct"
+    "google/gemini-2.5-flash-preview-05-20",
+    "qwen/qwen3-235b-a22b", 
+    "qwen/qwen3-32b", 
+    "qwen/qwen3-14b",
+    "google/gemma-3-27b-it",
+    "google/gemma-3-12b-it",
+    "meta-llama/llama-3.1-405b-instruct",
+    "meta-llama/llama-3.3-70b-instruct"
 ]
 
 # Фиксированная температура
@@ -143,12 +149,14 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
     
     # Оцениваем результаты
     try:
-        evaluation_df = evaluate_dataset(
+        # Используем асинхронную версию оценки для ускорения
+        evaluation_df = await evaluate_dataset_async(
             dataset=dataset,
             system_responses=system_responses,
             model_name=model_name,
             temperature=TEMPERATURE,
-            limit=limit
+            limit=limit,
+            max_concurrency=3  # Лимит одновременных запросов к LLM для метрик
         )
         
         # Генерируем отчет

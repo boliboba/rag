@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import torch
+import asyncio
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 from bleurt_pytorch import BleurtConfig, BleurtForSequenceClassification, BleurtTokenizer
@@ -212,3 +213,108 @@ def stop():
     """Сбрасывает все синглтоны для освобождения ресурсов"""
     get_bleurt_model.reset()
     get_bleurt_tokenizer.reset() 
+
+async def calculate_bleurt_score_async(references, candidates):
+    """Асинхронно рассчитывает BLEURT оценку между эталонными и кандидатными текстами"""
+    # Поскольку BLEURT работает с GPU и вычисления уже оптимизированы,
+    # просто вызываем синхронную функцию
+    return calculate_bleurt_score(references, candidates)
+
+async def calculate_cosine_similarity_async(texts1, texts2):
+    """Асинхронно рассчитывает косинусную близость между двумя наборами текстов"""
+    # Поскольку вычисление эмбеддингов - затратная операция,
+    # просто вызываем синхронную функцию
+    return calculate_cosine_similarity(texts1, texts2)
+
+async def evaluate_dataset_async(dataset, system_responses=None, model_name=MODEL_NAME, temperature=0.0, limit=None, max_concurrency=5):
+    """Асинхронная версия функции evaluate_dataset, использующая a_measure для метрик"""
+    # Создаем тестовые случаи в зависимости от наличия ответов системы
+    test_cases = create_test_cases(dataset, system_responses, limit)
+    eval_model = OpenRouterDeepEvalAdapter(model_name=model_name, temperature=temperature)
+    
+    # RAG Triad и Correctness
+    metrics = [
+        FaithfulnessMetric(threshold=0.5, model=eval_model),
+        AnswerRelevancyMetric(threshold=0.5, model=eval_model),
+        ContextualRelevancyMetric(threshold=0.5, model=eval_model),
+        GEval(
+            name="Correctness",
+            criteria="Определите, является ли 'фактический вывод' правильным на основе 'ожидаемого вывода'.",
+            evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+            threshold=0.5,
+            model=eval_model
+        )
+    ]
+    
+    # Подготовка данных для BLEURT и косинусных метрик
+    references = [test_case.expected_output for test_case in test_cases]
+    candidates = [test_case.actual_output for test_case in test_cases]
+    
+    # Асинхронный расчет BLEURT и косинусных оценок
+    bleurt_task = asyncio.create_task(calculate_bleurt_score_async(references, candidates))
+    cosine_task = asyncio.create_task(calculate_cosine_similarity_async(references, candidates))
+    
+    # Ограничиваем количество одновременных запросов к LLM
+    semaphore = asyncio.Semaphore(max_concurrency)
+    
+    async def process_test_case(i, test_case):
+        """Обрабатывает один тестовый случай со всеми метриками"""
+        async with semaphore:
+            metric_scores = {}
+            
+            # Асинхронно вычисляем метрики
+            measure_tasks = []
+            for metric in metrics:
+                # Проверяем наличие асинхронного метода a_measure
+                if hasattr(metric, 'a_measure'):
+                    task = asyncio.create_task(metric.a_measure(test_case))
+                else:
+                    # Если асинхронного метода нет, запускаем синхронный в другом потоке
+                    loop = asyncio.get_event_loop()
+                    task = loop.run_in_executor(None, lambda: metric.measure(test_case))
+                measure_tasks.append((metric, task))
+            
+            # Ждем завершения всех задач по метрикам
+            for metric, task in measure_tasks:
+                await task
+                metric_name = metric.__class__.__name__.replace("Metric", "")
+                metric_scores[metric_name] = metric.score
+            
+            return i, metric_scores
+    
+    # Запускаем обработку всех тестовых случаев параллельно
+    tasks = [process_test_case(i, test_case) for i, test_case in enumerate(test_cases)]
+    metric_results = await asyncio.gather(*tasks)
+    
+    # Получаем результаты других асинхронных задач
+    bleurt_scores = await bleurt_task
+    cosine_scores = await cosine_task
+    
+    # Формируем итоговые результаты
+    results = []
+    for i, metric_scores in sorted(metric_results):
+        test_case = test_cases[i]
+        
+        # Добавляем BLEURT и косинусную оценки
+        metric_scores["BLEURT"] = bleurt_scores[i]
+        metric_scores["CosineSimilarity"] = cosine_scores[i]
+        
+        # В зависимости от наличия ответов системы формируем результат
+        if system_responses is not None:
+            result_item = {
+                "question": test_case.input,
+                "system_answer": test_case.actual_output,
+                "golden_answer": test_case.expected_output,
+                **metric_scores,
+                "avg_score": np.mean(list(metric_scores.values())),
+            }
+        else:
+            result_item = {
+                **dataset.iloc[i].to_dict(),
+                **metric_scores,
+                "avg_score": np.mean(list(metric_scores.values())),
+            }
+            
+        results.append(result_item)
+    
+    return pd.DataFrame(results) 
