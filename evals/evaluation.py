@@ -236,7 +236,7 @@ async def calculate_cosine_similarity_async(texts1, texts2):
     # просто вызываем синхронную функцию
     return calculate_cosine_similarity(texts1, texts2)
 
-async def evaluate_dataset_async(dataset, system_responses=None, model_name=MODEL_NAME, temperature=0.0, limit=None, max_concurrency=5):
+async def evaluate_dataset_async(dataset, system_responses=None, model_name=MODEL_NAME, temperature=0.0, limit=None, max_concurrency=4):
     """Асинхронная версия функции evaluate_dataset, использующая a_measure для метрик"""
     # Создаем тестовые случаи в зависимости от наличия ответов системы
     test_cases = create_test_cases(dataset, system_responses, limit)

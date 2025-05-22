@@ -64,7 +64,7 @@ TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 LIMIT = 20
 
 # Максимальное количество одновременно оцениваемых моделей
-MAX_CONCURRENCY = 2
+MAX_CONCURRENCY = 4
 
 def create_model_specific_chain(model_name):
     """Создает специальную цепочку для конкретной модели без изменения глобальных настроек"""
@@ -162,7 +162,7 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
             model_name=model_name,
             temperature=TEMPERATURE,
             limit=limit,
-            max_concurrency=3  # Лимит одновременных запросов к LLM для метрик
+            max_concurrency=4  # Лимит одновременных запросов к LLM для метрик
         )
         
         # Генерируем отчет
