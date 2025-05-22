@@ -75,7 +75,10 @@ def create_model_specific_chain(model_name):
     
     def retrieve_and_rerank(query):
         docs = retrieve(query)
-        return rerank(query, docs)
+        print(f"Найдено чанков: {len(docs)}")
+        reranked_docs = rerank(query, docs)
+        print(f"Реранжировано чанков: {len(reranked_docs)}")
+        return reranked_docs
     
     retrieval_fn = lambda query: format_docs(
         retrieve_and_rerank(query)
@@ -108,8 +111,10 @@ async def generate_system_responses_async(dataset, model_name, limit=None):
         # Используем стандартный retrieval_chain с асинхронным вызовом
         try:
             # retrieval_chain извлекает контекст и генерирует ответ
+            print(f"\nВопрос: {question}")
             result = await retrieval_chain.ainvoke(question)
             answer = result
+            print(f"Ответ модели: {answer[:100]}..." if len(answer) > 100 else f"Ответ модели: {answer}")
             
             responses.append({
                 "question": question,
