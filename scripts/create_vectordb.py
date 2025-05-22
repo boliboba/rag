@@ -25,6 +25,16 @@ def main():
     
     df = pd.read_csv(args.input, sep=';')
     df = df.dropna(subset=["content_raw"])
+    
+    # Фильтрация материалов из сообщества (UGC)
+    if 'rubrics' in df.columns:
+        initial_count = len(df)
+        df = df[df['rubrics'] != 'Материалы из сообщества']
+        filtered_count = len(df)
+        print(f"Исключены записи с рубрикой 'Материалы из сообщества': {initial_count} -> {filtered_count} ({initial_count - filtered_count} удалено)")
+    else:
+        print("Предупреждение: поле 'rubrics' не найдено в данных")
+    
     df["content_raw"] = df["content_raw"].apply(preprocess_article)   
 
     text_splitter = MarkdownTextSplitter(chunk_size=args.chunk_size, chunk_overlap=args.chunk_overlap)
