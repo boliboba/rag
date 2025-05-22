@@ -63,38 +63,60 @@ LIMIT = 3
 # Максимальное количество одновременно оцениваемых моделей
 MAX_CONCURRENCY = 6
 
+# Глобальный кэш для предпосчитанных документов
+_document_cache = {}
+
+def precompute_documents_for_all_questions(dataset, limit=None):
+    """Предпосчитывает релевантные документы для всех вопросов один раз"""
+    if limit is not None and limit < len(dataset):
+        dataset = dataset.sample(limit, random_state=42).reset_index(drop=True)
+    
+    global _document_cache
+    _document_cache.clear()
+    
+    print(f"🔍 Предпосчитываем документы для {len(dataset)} вопросов...")
+    
+    for idx, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Предпосчёт документов")):
+        question = row["question"]
+        
+        try:
+            # Получаем документы из векторной базы
+            docs = retrieve(question)
+            
+            # Выбираем 5 случайных документов для экономии памяти
+            import random
+            if len(docs) > 5:
+                selected_docs = random.sample(docs, 5)
+            else:
+                selected_docs = docs
+            
+            # Форматируем контекст
+            formatted_context = format_docs(selected_docs)
+            
+            # Кэшируем результат
+            _document_cache[question] = formatted_context
+            
+        except Exception as e:
+            logger.error(f"Ошибка при предпосчёте документов для вопроса {idx}: {e}")
+            _document_cache[question] = "Контекст недоступен"
+    
+    print(f"✅ Предпосчёт завершён! Сохранено {len(_document_cache)} контекстов")
+    return dataset
+
 def create_model_specific_chain(model_name):
-    """Создает специальную цепочку для конкретной модели без изменения глобальных настроек"""
+    """Создает специальную цепочку для конкретной модели с использованием предпосчитанных документов"""
     prompt = ChatPromptTemplate.from_template(PROMPTS["qa"])
     
     # Создаем новый экземпляр LLM для этой конкретной модели
     llm = get_llm(model_name=model_name, temperature=TEMPERATURE)
     
-    def retrieve_and_rerank(query):
-        docs = retrieve(query)
-        print(f"Найдено чанков: {len(docs)}")
-        # Реранкер временно отключен для экономии памяти
-        # reranked_docs = rerank(query, docs)
-        # print(f"Реранжировано чанков: {len(reranked_docs)}")
-        
-        # Выбираем 5 случайных документов для экономии памяти
-        import random
-        if len(docs) > 5:
-            selected_docs = random.sample(docs, 5)
-            print(f"Выбрано 5 случайных документов из {len(docs)}")
-        else:
-            selected_docs = docs
-            print(f"Используются все {len(docs)} документов")
-        
-        print("Реранкер отключен - используются исходные документы")
-        return selected_docs
-    
-    retrieval_fn = lambda query: format_docs(
-        retrieve_and_rerank(query)
-    )
+    def get_cached_context(query):
+        """Получает предпосчитанный контекст из кэша"""
+        global _document_cache
+        return _document_cache.get(query, "Контекст недоступен")
     
     rag_chain = (
-        {"context": retrieval_fn, "question": RunnablePassthrough()}
+        {"context": get_cached_context, "question": RunnablePassthrough()}
         | prompt
         | llm
         | StrOutputParser()
@@ -102,8 +124,8 @@ def create_model_specific_chain(model_name):
     
     return rag_chain
 
-async def generate_system_responses_async(dataset, model_name, limit=None):
-    """Асинхронно генерирует ответы системы для заданной модели"""
+async def generate_system_responses_async(dataset, model_name, limit=None, max_concurrent_questions=3):
+    """Асинхронно генерирует ответы системы для заданной модели с параллельной обработкой вопросов"""
     if limit is not None and limit < len(dataset):
         # Используем тот же random_state=42 для согласованности с create_test_cases
         dataset = dataset.sample(limit, random_state=42).reset_index(drop=True)
@@ -111,32 +133,40 @@ async def generate_system_responses_async(dataset, model_name, limit=None):
     # Создаем специальную цепочку для этой модели
     retrieval_chain = create_model_specific_chain(model_name)
     
-    responses = []
-    for _, row in tqdm(dataset.iterrows(), total=len(dataset), 
-                      desc=f"Генерация ответов для {model_name}"):
-        question = row["question"]
-        golden_answer = row["answer"]
-        
-        # Используем стандартный retrieval_chain с асинхронным вызовом
-        try:
-            # retrieval_chain извлекает контекст и генерирует ответ
-            print(f"\nВопрос: {question}")
-            result = await retrieval_chain.ainvoke(question)
-            answer = result
-            print(f"Ответ модели: {answer[:100]}..." if len(answer) > 100 else f"Ответ модели: {answer}")
-            
-            responses.append({
-                "question": question,
-                "system_answer": answer,
-                "golden_answer": golden_answer
-            })
-        except Exception as e:
-            logger.error(f"Ошибка при генерации ответа: {e}")
-            responses.append({
-                "question": question,
-                "system_answer": "Произошла ошибка при генерации ответа",
-                "golden_answer": golden_answer
-            })
+    # Семафор для ограничения одновременных запросов к одной модели
+    semaphore = asyncio.Semaphore(max_concurrent_questions)
+    
+    async def process_question(question, golden_answer, question_idx):
+        """Обрабатывает один вопрос"""
+        async with semaphore:
+            try:
+                print(f"\n[{model_name}] Вопрос {question_idx + 1}: {question}")
+                result = await retrieval_chain.ainvoke(question)
+                answer = result
+                print(f"[{model_name}] Ответ {question_idx + 1}: {answer[:100]}..." if len(answer) > 100 else f"[{model_name}] Ответ {question_idx + 1}: {answer}")
+                
+                return {
+                    "question": question,
+                    "system_answer": answer,
+                    "golden_answer": golden_answer
+                }
+            except Exception as e:
+                logger.error(f"Ошибка при генерации ответа для вопроса {question_idx + 1}: {e}")
+                return {
+                    "question": question,
+                    "system_answer": "Произошла ошибка при генерации ответа",
+                    "golden_answer": golden_answer
+                }
+    
+    # Создаем задачи для всех вопросов
+    tasks = []
+    for idx, (_, row) in enumerate(dataset.iterrows()):
+        task = process_question(row["question"], row["answer"], idx)
+        tasks.append(task)
+    
+    # Выполняем все задачи параллельно с прогресс-баром
+    print(f"\n🚀 Запускаем параллельную генерацию {len(tasks)} ответов для {model_name} (конкурентность: {max_concurrent_questions})")
+    responses = await asyncio.gather(*tasks)
     
     return pd.DataFrame(responses)
 
@@ -154,7 +184,8 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
     system_responses = await generate_system_responses_async(
         dataset=dataset,
         model_name=model_name,
-        limit=limit
+        limit=limit,
+        max_concurrent_questions=3  # Параллельная обработка 3 вопросов на модель
     )
     
     # Сохраняем сырые ответы
@@ -185,6 +216,13 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         
         # Освобождаем ресурсы
         stop_evaluation()
+        
+        # Дополнительная очистка памяти
+        import gc
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        gc.collect()
         
         elapsed_time = time.time() - start_time
         logger.info(f"Оценка модели {model_name} завершена за {elapsed_time:.2f} секунд")
@@ -236,7 +274,8 @@ async def main():
             "eval_model": EVAL_MODEL_NAME,
             "temperature": TEMPERATURE,
             "dataset": TEST_DATASET_PATH,
-            "limit": LIMIT
+            "limit": LIMIT,
+            "optimization": "precomputed_docs_gpu_optimized"
         }, f, indent=2)
     
     # Загружаем датасет
@@ -247,7 +286,11 @@ async def main():
         logger.error(f"Ошибка при загрузке датасета: {e}")
         return
     
-    logger.info(f"Будет оценено {len(MODELS_TO_EVALUATE)} моделей")
+    # 🚀 КРИТИЧЕСКАЯ ОПТИМИЗАЦИЯ: Предпосчитываем документы для всех вопросов
+    logger.info("🔍 Начинаем предпосчёт релевантных документов для всех вопросов...")
+    dataset = precompute_documents_for_all_questions(dataset, limit=LIMIT)
+    
+    logger.info(f"🚀 Будет оценено {len(MODELS_TO_EVALUATE)} моделей с предпосчитанными документами")
     
     # Запускаем оценку всех моделей
     results = await run_evaluations(
@@ -282,7 +325,27 @@ async def main():
     summary_df = pd.DataFrame(summary_data)
     summary_df.to_csv(output_dir / "summary_table.csv", index=False)
     
-    logger.info(f"Оценка завершена. Результаты сохранены в {output_dir}")
+    # Финальная очистка всех ресурсов
+    global _document_cache
+    _document_cache.clear()
+    
+    # Очищаем GPU память и реранкер
+    try:
+        from core.modules.ranking import cleanup_reranker
+        cleanup_reranker()
+    except:
+        pass
+    
+    # Финальная очистка
+    stop_evaluation()
+    import gc
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+    
+    logger.info(f"🎉 Оценка завершена! Результаты сохранены в {output_dir}")
+    logger.info(f"📊 Обработано {len(MODELS_TO_EVALUATE)} моделей с оптимизированным алгоритмом")
 
 if __name__ == "__main__":
     # Избегаем устаревшего предупреждения

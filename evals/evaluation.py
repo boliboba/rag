@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 import torch
 import asyncio
+import gc
+from contextlib import contextmanager
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 from bleurt_pytorch import BleurtConfig, BleurtForSequenceClassification, BleurtTokenizer
@@ -23,40 +25,88 @@ from deepeval.metrics import (
     GEval
 )
 
+@contextmanager
+def gpu_memory_manager():
+    """Контекстный менеджер для управления GPU памятью"""
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        yield
+    finally:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        gc.collect()
+
 @lazy_singleton
 def get_bleurt_model():
     """Возвращает модель BLEURT для оценки текстовой генерации"""
-    model = BleurtForSequenceClassification.from_pretrained('lucadiliello/BLEURT-20')
-    
-    # Переводим модель в режим оценки
-    model.eval()
-    
-    # Перемещаем на GPU, если доступно
-    if torch.cuda.is_available():
-        model = model.cuda()
-        
-    return model
+    try:
+        with gpu_memory_manager():
+            # Принудительно используем вторую GPU для BLEURT
+            device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
+            
+            model = BleurtForSequenceClassification.from_pretrained('lucadiliello/BLEURT-20')
+            model.eval()
+            
+            if torch.cuda.is_available():
+                # Устанавливаем ограничение памяти для BLEURT
+                if device == 'cuda:1':
+                    torch.cuda.set_per_process_memory_fraction(0.5, device=1)
+                model = model.to(device)
+                
+            return model
+    except Exception as e:
+        print(f"⚠️ Ошибка загрузки BLEURT: {e}")
+        return None
 
 @lazy_singleton
 def get_bleurt_tokenizer():
     """Возвращает токенизатор для модели BLEURT"""
-    return BleurtTokenizer.from_pretrained('lucadiliello/BLEURT-20')
+    try:
+        return BleurtTokenizer.from_pretrained('lucadiliello/BLEURT-20')
+    except Exception as e:
+        print(f"⚠️ Ошибка загрузки токенизатора BLEURT: {e}")
+        return None
 
 def calculate_bleurt_score(references, candidates):
     """Рассчитывает BLEURT оценку между эталонными и кандидатными текстами"""
     model = get_bleurt_model()
     tokenizer = get_bleurt_tokenizer()
     
-    with torch.no_grad():
-        inputs = tokenizer(references, candidates, padding='longest', return_tensors='pt')
-        
-        # Перемещаем входные данные на GPU, если доступно
-        if torch.cuda.is_available():
-            inputs = {k: v.cuda() for k, v in inputs.items()}
-            
-        scores = model(**inputs).logits.flatten().cpu().tolist()
+    if model is None or tokenizer is None:
+        print("⚠️ BLEURT недоступен, возвращаем нулевые оценки")
+        return [0.0] * len(references)
     
-    return scores
+    try:
+        with gpu_memory_manager():
+            with torch.no_grad():
+                # Batch processing для экономии памяти
+                batch_size = 8
+                all_scores = []
+                
+                for i in range(0, len(references), batch_size):
+                    batch_refs = references[i:i+batch_size]
+                    batch_cands = candidates[i:i+batch_size]
+                    
+                    inputs = tokenizer(batch_refs, batch_cands, padding='longest', return_tensors='pt', truncation=True, max_length=512)
+                    
+                    # Определяем device модели
+                    device = next(model.parameters()).device
+                    inputs = {k: v.to(device) for k, v in inputs.items()}
+                    
+                    batch_scores = model(**inputs).logits.flatten().cpu().tolist()
+                    all_scores.extend(batch_scores)
+                    
+                    # Очищаем промежуточную память
+                    del inputs
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+                
+                return all_scores
+                
+    except Exception as e:
+        print(f"⚠️ Ошибка в BLEURT: {e}")
+        return [0.0] * len(references)
 
 def calculate_cosine_similarity(texts1, texts2):
     """Рассчитывает косинусную близость между двумя наборами текстов, используя эмбеддер из конфигурации"""
@@ -222,7 +272,10 @@ def save_results(dataset, output_path, report=None):
 def stop():
     """Сбрасывает все синглтоны для освобождения ресурсов"""
     get_bleurt_model.reset()
-    get_bleurt_tokenizer.reset() 
+    get_bleurt_tokenizer.reset()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect() 
 
 async def calculate_bleurt_score_async(references, candidates):
     """Асинхронно рассчитывает BLEURT оценку между эталонными и кандидатными текстами"""

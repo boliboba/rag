@@ -1,0 +1,239 @@
+2025-05-22 07:42:19,006 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-22 07:42:19,006 - __main__ - INFO - Будет оценено 1 моделей
+2025-05-22 07:42:19,006 - __main__ - INFO - Начинаем оценку модели: google/gemini-1.5-pro
+2025-05-22 07:43:18,885 - __main__ - ERROR - Ошибка при загрузке датасета: [Errno 2] No such file or directory: 'data/test_dataset.csv'
+2025-05-22 07:43:40,534 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-22 07:43:40,534 - __main__ - INFO - Будет оценено 1 моделей
+2025-05-22 07:43:40,534 - __main__ - INFO - Начинаем оценку модели: google/gemini-1.5-pro
+2025-05-22 07:43:40,609 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-22 07:43:43,310 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-22 07:43:43,329 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-22 07:43:43,332 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-22 07:47:33,202 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-22 07:47:33,202 - __main__ - INFO - Будет оценено 1 моделей
+2025-05-22 07:47:33,202 - __main__ - INFO - Начинаем оценку модели: google/gemini-1.5-pro
+2025-05-22 07:47:33,280 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-22 07:47:35,274 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-22 07:47:35,293 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-22 07:47:35,296 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-22 10:37:13,994 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-22 10:37:13,994 - __main__ - INFO - Будет оценено 1 моделей
+2025-05-22 10:37:13,994 - __main__ - INFO - Начинаем оценку модели: google/gemma-3-12b-it
+2025-05-22 10:37:14,069 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-22 10:37:16,172 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-22 10:37:16,192 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-22 10:37:16,195 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-22 23:36:18,230 - __main__ - INFO - Инициализация всех моделей перед асинхронным выполнением...
+2025-05-22 23:36:18,230 - __main__ - INFO - Инициализация эмбеддинг модели...
+2025-05-22 23:36:18,256 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-22 23:36:20,334 - __main__ - INFO - Эмбеддинг модель инициализирована успешно
+2025-05-22 23:36:20,334 - __main__ - INFO - Инициализация реранкера...
+2025-05-22 23:36:22,482 - __main__ - INFO - Реранкер инициализирован успешно
+2025-05-22 23:36:22,482 - __main__ - INFO - Инициализация векторного хранилища...
+2025-05-22 23:36:22,483 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-22 23:36:22,496 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-22 23:36:22,499 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-22 23:36:24,512 - __main__ - INFO - Векторное хранилище инициализировано успешно
+2025-05-22 23:36:24,512 - __main__ - INFO - Инициализация BLEURT моделей...
+2025-05-22 23:37:00,638 - __main__ - INFO - Очистка ресурсов...
+2025-05-22 23:37:00,638 - __main__ - INFO - Ресурсы очищены успешно
+2025-05-23 01:12:20,770 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-23 01:12:20,770 - __main__ - INFO - Будет оценено 2 моделей
+2025-05-23 01:12:20,771 - __main__ - INFO - Начинаем оценку модели: google/gemma-3-12b-it
+2025-05-23 01:12:20,853 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:12:22,952 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-23 01:12:22,964 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-23 01:12:22,968 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-23 01:16:07,945 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-23 01:16:07,945 - __main__ - INFO - Будет оценено 2 моделей
+2025-05-23 01:16:07,945 - __main__ - INFO - Начинаем оценку модели: google/gemma-3-12b-it
+2025-05-23 01:16:08,019 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:16:10,070 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-23 01:16:10,090 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-23 01:16:10,093 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-23 01:16:13,532 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:16:19,485 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:16:23,205 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:16:26,044 - __main__ - INFO - Ответы системы сохранены в results/eval_20250523_011607/google_gemma-3-12b-it/system_responses.csv
+2025-05-23 01:16:26,044 - __main__ - INFO - Используем google/gemini-2.5-flash-preview-05-20 для оценки ответов модели google/gemma-3-12b-it
+2025-05-23 01:25:41,328 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:25:45,159 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,285 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,287 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,423 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,724 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,800 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,812 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,812 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,815 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,830 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,843 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,845 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,887 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,947 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:45,971 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:46,845 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:46,902 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:47,299 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:47,348 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:47,400 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:47,411 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:47,770 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:48,564 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:49,012 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:49,383 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:49,487 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:50,116 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:51,798 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:52,588 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:53,338 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:54,054 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:55,145 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:55,917 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:25:56,748 - __main__ - INFO - Оценка модели google/gemma-3-12b-it завершена за 588.80 секунд
+2025-05-23 01:25:56,749 - __main__ - INFO - Начинаем оценку модели: qwen/qwen3-32b
+2025-05-23 01:25:57,670 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:11,108 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:26,687 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:39,325 - __main__ - INFO - Ответы системы сохранены в results/eval_20250523_011607/qwen_qwen3-32b/system_responses.csv
+2025-05-23 01:26:39,325 - __main__ - INFO - Используем google/gemini-2.5-flash-preview-05-20 для оценки ответов модели qwen/qwen3-32b
+2025-05-23 01:26:41,936 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:26:46,286 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,301 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,333 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,339 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,395 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,440 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,813 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,837 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,839 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,847 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,847 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,877 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,892 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,899 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:46,917 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:47,402 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:47,561 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:47,845 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:47,850 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:47,931 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:48,706 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:48,750 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:49,225 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:49,649 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:49,976 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:50,211 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:50,566 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:53,325 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:54,348 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:54,700 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:54,945 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:55,965 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:56,473 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:26:57,428 - __main__ - INFO - Оценка модели qwen/qwen3-32b завершена за 60.68 секунд
+2025-05-23 01:26:57,430 - __main__ - INFO - Оценка завершена. Результаты сохранены в results/eval_20250523_011607
+2025-05-23 01:28:42,423 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-23 01:28:42,423 - __main__ - INFO - Будет оценено 2 моделей
+2025-05-23 01:28:42,423 - __main__ - INFO - Начинаем оценку модели: google/gemma-3-12b-it
+2025-05-23 01:28:42,478 - __main__ - INFO - Начинаем оценку модели: qwen/qwen3-32b
+2025-05-23 01:28:42,569 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:28:42,571 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:28:44,560 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-23 01:28:44,574 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-23 01:28:44,577 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-23 01:28:48,702 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:28:49,365 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:00,973 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:06,447 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:15,883 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:24,129 - __main__ - INFO - Ответы системы сохранены в results/eval_20250523_012842/google_gemma-3-12b-it/system_responses.csv
+2025-05-23 01:29:24,130 - __main__ - INFO - Используем google/gemini-2.5-flash-preview-05-20 для оценки ответов модели google/gemma-3-12b-it
+2025-05-23 01:29:27,872 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:29:31,657 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:31,657 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,114 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,153 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,242 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,477 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,478 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,479 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,485 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,494 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,513 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:32,553 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,077 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,181 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,214 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,482 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,549 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:33,732 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:34,070 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:34,531 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:34,656 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:35,021 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:35,138 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:36,204 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:37,045 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:37,057 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:37,751 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:38,538 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:39,517 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:40,871 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:41,087 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:41,245 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:42,280 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:42,378 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:43,107 - __main__ - INFO - Оценка модели google/gemma-3-12b-it завершена за 60.68 секунд
+2025-05-23 01:29:50,296 - __main__ - INFO - Ответы системы сохранены в results/eval_20250523_012842/qwen_qwen3-32b/system_responses.csv
+2025-05-23 01:29:50,296 - __main__ - INFO - Используем google/gemini-2.5-flash-preview-05-20 для оценки ответов модели qwen/qwen3-32b
+2025-05-23 01:29:53,272 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:29:57,052 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,052 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,295 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,374 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,374 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,604 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,610 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,665 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,670 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,754 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,793 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,816 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:57,996 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:58,534 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:58,582 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:58,716 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:58,958 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:59,108 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:59,214 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:59,577 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:29:59,600 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:00,226 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:00,303 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:01,042 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:01,352 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:01,636 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:02,013 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:04,069 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:05,404 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:07,014 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:07,599 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:08,234 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:09,574 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2025-05-23 01:30:10,558 - __main__ - INFO - Оценка модели qwen/qwen3-32b завершена за 88.08 секунд
+2025-05-23 01:30:10,560 - __main__ - INFO - Оценка завершена. Результаты сохранены в results/eval_20250523_012842
+2025-05-23 01:37:10,173 - __main__ - INFO - Загружен датасет с 384 примерами
+2025-05-23 01:37:10,173 - __main__ - INFO - Будет оценено 2 моделей
+2025-05-23 01:37:10,173 - __main__ - INFO - Начинаем оценку модели: google/gemma-3-12b-it
+2025-05-23 01:37:10,206 - __main__ - INFO - Начинаем оценку модели: qwen/qwen3-32b
+2025-05-23 01:37:10,284 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:10,287 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:10,291 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:10,292 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:10,292 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:10,295 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: deepvk/USER-bge-m3
+2025-05-23 01:37:12,460 - faiss.loader - INFO - Loading faiss with AVX2 support.
+2025-05-23 01:37:12,480 - faiss.loader - INFO - Successfully loaded faiss with AVX2 support.
+2025-05-23 01:37:12,483 - faiss - INFO - Failed to load GPU Faiss: name 'GpuIndexIVFFlat' is not defined. Will not load constructor refs for GPU indexes.
+2025-05-23 01:37:16,974 - httpx - INFO - HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
