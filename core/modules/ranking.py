@@ -41,7 +41,7 @@ def rerank_documents(query, docs, reranker=None, top_k=None):
     
     try:
         # Простой и быстрый реранкинг для ~100 документов
-        pairs = [[query, doc.page_content[:400]] for doc in docs]
+        pairs = [[query, doc.page_content] for doc in docs]
         scores = reranker.compute_score(pairs)
         
         scored_docs = list(zip(docs, scores))
