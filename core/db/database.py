@@ -26,7 +26,8 @@ def get_embedding_model(model_name="deepvk/USER-bge-m3"):
     
     return HuggingFaceEmbeddings(
         model_name=model_name, 
-        model_kwargs={'device': device}
+        model_kwargs={'device': device, 
+                      'trust_remote_code': True}
     )
 
 def create_vectorstore(documents, embedding_model=None):
