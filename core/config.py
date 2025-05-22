@@ -10,7 +10,7 @@ HYBRID_ALPHA = float(environ.get("HYBRID_ALPHA", 0.5))
 SEARCH_TOP_K = int(environ.get("SEARCH_TOP_K", 100))
 
 # Настройки реранкера
-EMBEDDING_MODEL = environ.get("EMBEDDING_MODEL", "deepvk/USER-bge-m3")
+EMBEDDING_MODEL = environ.get("EMBEDDING_MODEL", "jinaai/jina-embeddings-v3")
 USE_RERANKER = environ.get("USE_RERANKER", "True").lower() in ("true", "1", "yes")
 RERANKER_MODEL = environ.get("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
 RERANKER_TOP_K = int(environ.get("RERANKER_TOP_K", 5))
