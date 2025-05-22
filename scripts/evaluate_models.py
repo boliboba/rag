@@ -44,7 +44,9 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация для оценки - список моделей
 MODELS_TO_EVALUATE = [
-    "google/gemma-3-12b-it"
+    "google/gemma-3-12b-it",
+    "google/gemini-2.5-flash-preview-05-20",
+    "qwen/qwen3-32b"
 ]
 
 # Фиксированная температура
@@ -60,7 +62,7 @@ TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 LIMIT = 3
 
 # Максимальное количество одновременно оцениваемых моделей
-MAX_CONCURRENCY = 1
+MAX_CONCURRENCY = 4
 
 def create_model_specific_chain(model_name):
     """Создает специальную цепочку для конкретной модели без изменения глобальных настроек"""
