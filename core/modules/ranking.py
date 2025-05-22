@@ -25,13 +25,30 @@ def get_reranker():
     
     try:
         with gpu_memory_manager():
-            # Принудительно используем первую GPU если доступна
-            device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+            # Пытаемся использовать GPU 1 для реранкера, чтобы избежать конфликтов с основными моделями
+            device = 'cpu'  # По умолчанию CPU
+            gpu_device_id = None
+            
+            if torch.cuda.is_available():
+                gpu_count = torch.cuda.device_count()
+                print(f"🔍 Доступно GPU: {gpu_count}")
+                
+                if gpu_count > 1:
+                    # Если есть несколько GPU, используем вторую для реранкера
+                    device = 'cuda:1'
+                    gpu_device_id = 1
+                    print(f"🚀 Реранкер загружается на GPU 1")
+                else:
+                    # Если только одна GPU, используем её
+                    device = 'cuda:0'
+                    gpu_device_id = 0
+                    print(f"⚠️ Только одна GPU доступна, реранкер загружается на GPU 0")
+            
             use_fp16 = torch.cuda.is_available()
             
-            # Устанавливаем максимальную память для модели
-            if torch.cuda.is_available():
-                torch.cuda.set_per_process_memory_fraction(0.7, device=0)
+            # Устанавливаем максимальную память для модели на выбранной GPU
+            if gpu_device_id is not None:
+                torch.cuda.set_per_process_memory_fraction(0.7, device=gpu_device_id)
             
             reranker = FlagLLMReranker(
                 RERANKER_MODEL, 
@@ -39,6 +56,7 @@ def get_reranker():
                 device=device
             )
             
+            print(f"✅ Реранкер успешно загружен на {device}")
             return reranker
             
     except Exception as e:
