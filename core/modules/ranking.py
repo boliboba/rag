@@ -1,5 +1,7 @@
 import torch
 import gc
+import signal
+import time
 from contextlib import contextmanager
 from FlagEmbedding import FlagLLMReranker
 
@@ -17,6 +19,35 @@ def gpu_memory_manager():
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         gc.collect()
+
+def timeout_handler(signum, frame):
+    """Обработчик таймаута"""
+    raise TimeoutError("Реранкер превысил максимальное время выполнения")
+
+def rerank_with_timeout(reranker, pairs, timeout_seconds=30):
+    """Выполняет реранжирование с таймаутом"""
+    # Устанавливаем сигнал для таймаута (только на Unix системах)
+    try:
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(timeout_seconds)
+        
+        start_time = time.time()
+        scores = reranker.compute_score(pairs)
+        elapsed = time.time() - start_time
+        
+        signal.alarm(0)  # Отключаем таймаут
+        signal.signal(signal.SIGALRM, old_handler)  # Восстанавливаем обработчик
+        
+        print(f"⏱️ Реранжирование заняло {elapsed:.2f} секунд")
+        return scores
+        
+    except (AttributeError, OSError):
+        # Windows или система без поддержки сигналов - простое выполнение
+        start_time = time.time()
+        scores = reranker.compute_score(pairs)
+        elapsed = time.time() - start_time
+        print(f"⏱️ Реранжирование заняло {elapsed:.2f} секунд")
+        return scores
 
 @lazy_singleton
 def get_reranker():
@@ -78,18 +109,32 @@ def rerank_documents(query, docs, reranker=None, top_k=None):
     
     try:
         with gpu_memory_manager():
-            # Простой реранкинг с полным контентом документов для ~100 чанков
-            pairs = [[query, doc.page_content] for doc in docs]
-            scores = reranker.compute_score(pairs)
+            print(f"🔄 Начинаем реранжирование {len(docs)} документов...")
+            
+            # Ограничиваем длину контента документов для стабильности
+            max_content_length = 512  # Безопасная длина для реранкера
+            pairs = []
+            for i, doc in enumerate(docs):
+                content = doc.page_content[:max_content_length]
+                pairs.append([query, content])
+                if i < 3:  # Логируем первые 3 документа
+                    print(f"  Документ {i+1}: {len(content)} символов")
+            
+            print(f"🚀 Отправляем {len(pairs)} пар на реранжирование...")
+            scores = rerank_with_timeout(reranker, pairs, timeout_seconds=60)
+            print(f"✅ Получены скоры для {len(scores)} документов")
             
             scored_docs = list(zip(docs, scores))
             scored_docs.sort(key=lambda x: x[1], reverse=True)
             
             reranked_docs = [doc for doc, _ in scored_docs[:top_k]]
+            print(f"📊 Реранжирование завершено: отобрано {len(reranked_docs)} из {len(docs)} документов")
             return reranked_docs
             
     except Exception as e:
         print(f"⚠️ Ошибка реранжирования: {e}")
+        import traceback
+        traceback.print_exc()
         return docs[:top_k] if top_k else docs
 
 def cleanup_reranker():
