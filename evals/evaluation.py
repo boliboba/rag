@@ -322,7 +322,13 @@ async def evaluate_dataset_async(dataset, system_responses=None, model_name=MODE
             for metric in metrics:
                 # Проверяем наличие асинхронного метода a_measure
                 if hasattr(metric, 'a_measure'):
-                    task = asyncio.create_task(metric.a_measure(test_case))
+                    async def measure_metric(metric, test_case):
+                        try:
+                            return await metric.a_measure(test_case)
+                        except Exception as e:
+                            print(f"Ошибка при оценке метрики {metric.__class__.__name__}: {e}")
+                            return None
+                    task = asyncio.create_task(measure_metric(metric, test_case))
                 else:
                     # Если асинхронного метода нет, запускаем синхронный в другом потоке
                     loop = asyncio.get_event_loop()
