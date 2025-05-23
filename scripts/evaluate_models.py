@@ -220,11 +220,34 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         )
         
         # Генерируем отчет
-        report = generate_report(evaluation_df)
-        
-        # Сохраняем результаты и отчет
-        results_path = model_dir / "evaluation_results.csv"
-        save_results(evaluation_df, str(results_path), report)
+        try:
+            report = generate_report(evaluation_df)
+            
+            # Сохраняем результаты и отчет
+            results_path = model_dir / "evaluation_results.csv"
+            save_results(evaluation_df, str(results_path), report)
+        except ValueError as e:
+            logger.error(f"Ошибка при генерации отчета: {e}")
+            # Создаем минимальный отчет
+            report = {
+                "error": str(e),
+                "faithfulness": {"mean": 0.0},
+                "answerrelevancy": {"mean": 0.0},
+                "contextualrelevancy": {"mean": 0.0},
+                "correctness": {"mean": 0.0},
+                "bleurt": {"mean": 0.0},
+                "cosinesimilarity": {"mean": 0.0},
+                "avg_score": {"mean": 0.0}
+            }
+            
+            # Сохраняем хотя бы сырые ответы
+            results_path = model_dir / "evaluation_results_error.csv"
+            evaluation_df.to_csv(results_path, index=False)
+            
+            # Сохраняем минимальный отчет
+            report_path = model_dir / "evaluation_report_error.json"
+            with open(report_path, 'w', encoding='utf-8') as f:
+                json.dump(report, f, ensure_ascii=False, indent=2)
         
         # Освобождаем ресурсы
         stop_evaluation()
@@ -329,6 +352,10 @@ async def main():
         
         # Добавляем основные метрики
         for metric_name, metric_values in result.get("metrics", {}).items():
+            if metric_name == "error":
+                row["error"] = metric_values
+                continue
+                
             row[f"{metric_name}_mean"] = metric_values.get("mean", np.nan)
         
         summary_data.append(row)

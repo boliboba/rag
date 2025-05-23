@@ -232,22 +232,40 @@ def generate_report(evaluated_df):
     stats = {}
     # Для каждой метрики вычисляем статистики
     for metric in metric_columns:
-        scores = evaluated_df[metric].dropna().tolist()
-        if scores:
+        try:
+            scores = evaluated_df[metric].dropna().tolist()
+            if scores:
+                stats[metric] = {
+                    "mean": float(np.mean(scores)),
+                    "min": float(np.min(scores)),
+                    "max": float(np.max(scores)),
+                    "median": float(np.median(scores))
+                }
+        except Exception as e:
+            print(f"Ошибка при обработке метрики {metric}: {e}")
             stats[metric] = {
-                "mean": float(np.mean(scores)),
-                "min": float(np.min(scores)),
-                "max": float(np.max(scores)),
-                "median": float(np.median(scores))
+                "mean": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "median": 0.0,
+                "error": str(e)
             }
     
     # Добавляем статистику по средней оценке
-    stats["avg_score"] = {
-        "mean": float(np.mean(evaluated_df["avg_score"].dropna())),
-        "min": float(np.min(evaluated_df["avg_score"].dropna())),
-        "max": float(np.max(evaluated_df["avg_score"].dropna())),
-        "median": float(np.median(evaluated_df["avg_score"].dropna()))
-    }
+    try:
+        avg_scores = evaluated_df["avg_score"].dropna()
+        if len(avg_scores) > 0:
+            stats["avg_score"] = {
+                "mean": float(np.mean(avg_scores)),
+                "min": float(np.min(avg_scores)),
+                "max": float(np.max(avg_scores)),
+                "median": float(np.median(avg_scores))
+            }
+        else:
+            stats["avg_score"] = {"mean": 0.0, "min": 0.0, "max": 0.0, "median": 0.0}
+    except Exception as e:
+        print(f"Ошибка при обработке средней оценки: {e}")
+        stats["avg_score"] = {"mean": 0.0, "min": 0.0, "max": 0.0, "median": 0.0, "error": str(e)}
     
     return stats
 
@@ -266,8 +284,18 @@ def save_results(dataset, output_path, report=None):
             f"{os.path.splitext(os.path.basename(output_path))[0]}_report.json"
         )
         
-        with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump(report, f, ensure_ascii=False, indent=2) 
+        try:
+            with open(report_path, 'w', encoding='utf-8') as f:
+                json.dump(report, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"Ошибка при сохранении отчета в JSON: {e}")
+            # Попытка сохранить в более простом формате
+            fallback_path = os.path.join(
+                os.path.dirname(output_path), 
+                f"{os.path.splitext(os.path.basename(output_path))[0]}_report_fallback.txt"
+            )
+            with open(fallback_path, 'w', encoding='utf-8') as f:
+                f.write(str(report))
 
 def stop():
     """Сбрасывает все синглтоны для освобождения ресурсов"""
