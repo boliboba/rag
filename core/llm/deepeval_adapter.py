@@ -1,5 +1,6 @@
 from deepeval.models import DeepEvalBaseLLM
 from core.llm.models import ChatOpenRouter
+import json
 
 
 class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
@@ -26,12 +27,15 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
     
     def generate(self, prompt: str, schema) -> str:
         chat_model = self.load_model()
-        return chat_model.with_structured_output(schema).invoke(prompt).content
+        result = chat_model.with_structured_output(schema).invoke(prompt).content
+        json_result = json.loads(result)
+        return schema(**json_result)
 
     async def a_generate(self, prompt: str, schema) -> str:
         chat_model = self.load_model()
-        res = await chat_model.with_structured_output(schema).ainvoke(prompt)
-        return res.content
+        result = await chat_model.with_structured_output(schema).ainvoke(prompt)
+        json_result = json.loads(result.content)
+        return schema(**json_result)
     
     def get_model_name(self):
         return f"OpenRouter-{self.llm.model_name}" 
