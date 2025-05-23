@@ -51,7 +51,9 @@ MODELS_TO_EVALUATE = [
     "google/gemma-3-27b-it",
     "google/gemma-3-12b-it",
     "meta-llama/llama-3.1-405b-instruct",
-    "meta-llama/llama-3.3-70b-instruct"
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-4-maverick",
+    "meta-llama/llama-4-scout"
 ]
 
 # Фиксированная температура
