@@ -153,7 +153,14 @@ async def generate_system_responses_async(dataset, model_name, limit=None, max_c
         async with semaphore:
             try:
                 print(f"\n[{model_name}] Вопрос {question_idx + 1}: {question}")
-                result = await retrieval_chain.ainvoke(question)
+                
+                # Добавляем /no_think для моделей Qwen чтобы отключить режим thinking
+                modified_question = question
+                if "qwen" in model_name.lower():
+                    modified_question = f"{question} /no_think"
+                    print(f"[{model_name}] Добавлен флаг /no_think для отключения режима thinking")
+                
+                result = await retrieval_chain.ainvoke(modified_question)
                 answer = result
                 print(f"[{model_name}] Ответ {question_idx + 1}: {answer[:100]}..." if len(answer) > 100 else f"[{model_name}] Ответ {question_idx + 1}: {answer}")
                 
