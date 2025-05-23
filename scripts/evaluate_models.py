@@ -85,32 +85,27 @@ def precompute_documents_for_all_questions(dataset, limit=None):
     for idx, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Предпосчёт документов")):
         question = row["question"]
         
-        try:
-            # Получаем документы из векторной базы
-            docs = retrieve(question)
-            print(f"Найдено чанков: {len(docs)}")
-            
-            # Проверяем настройку реранкера
-            from core.config import USE_RERANKER
-            if USE_RERANKER:
-                # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
-                reranked_docs = rerank(question, docs)
-                print(f"Реранжировано чанков: {len(reranked_docs)}")
-                final_docs = reranked_docs
-            else:
-                # Реранкер отключен - берём топ-5 без реранжирования
-                final_docs = docs[:5] if len(docs) > 5 else docs
-                print(f"Реранкер отключен - взято {len(final_docs)} документов без реранжирования")
-            
-            # Форматируем контекст
-            formatted_context = format_docs(final_docs)
-            
-            # Кэшируем результат
-            _document_cache[question] = formatted_context
-            
-        except Exception as e:
-            logger.error(f"Ошибка при предпосчёте документов для вопроса {idx}: {e}")
-            _document_cache[question] = "Контекст недоступен"
+        # Получаем документы из векторной базы
+        docs = retrieve(question)
+        print(f"Найдено чанков: {len(docs)}")
+        
+        # Проверяем настройку реранкера
+        from core.config import USE_RERANKER
+        if USE_RERANKER:
+            # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
+            reranked_docs = rerank(question, docs)
+            print(f"Реранжировано чанков: {len(reranked_docs)}")
+            final_docs = reranked_docs
+        else:
+            # Реранкер отключен - берём топ-5 без реранжирования
+            final_docs = docs[:5] if len(docs) > 5 else docs
+            print(f"Реранкер отключен - взято {len(final_docs)} документов без реранжирования")
+        
+        # Форматируем контекст
+        formatted_context = format_docs(final_docs)
+        
+        # Кэшируем результат
+        _document_cache[question] = formatted_context
     
     print(f"✅ Предпосчёт завершён! Сохранено {len(_document_cache)} контекстов")
     return dataset
@@ -151,30 +146,22 @@ async def generate_system_responses_async(dataset, model_name, limit=None, max_c
     async def process_question(question, golden_answer, question_idx):
         """Обрабатывает один вопрос"""
         async with semaphore:
-            try:
-                print(f"\n[{model_name}] Вопрос {question_idx + 1}: {question}")
-                # Добавляем /no_think для моделей Qwen чтобы отключить режим thinking
-                modified_question = question
-                if "qwen" in model_name.lower():
-                    modified_question = f"{question} /no_think"
-                    print(f"[{model_name}] Добавлен флаг /no_think для отключения режима thinking")
-                
-                result = await retrieval_chain.ainvoke(modified_question)
-                answer = result
-                print(f"[{model_name}] Ответ {question_idx + 1}: {answer[:100]}..." if len(answer) > 100 else f"[{model_name}] Ответ {question_idx + 1}: {answer}")
-                
-                return {
-                    "question": question,
-                    "system_answer": answer,
-                    "golden_answer": golden_answer
-                }
-            except Exception as e:
-                logger.error(f"Ошибка при генерации ответа для вопроса {question_idx + 1}: {e}")
-                return {
-                    "question": question,
-                    "system_answer": "Произошла ошибка при генерации ответа",
-                    "golden_answer": golden_answer
-                }
+            print(f"\n[{model_name}] Вопрос {question_idx + 1}: {question}")
+            # Добавляем /no_think для моделей Qwen чтобы отключить режим thinking
+            modified_question = question
+            if "qwen" in model_name.lower():
+                modified_question = f"{question} /no_think"
+                print(f"[{model_name}] Добавлен флаг /no_think для отключения режима thinking")
+            
+            result = await retrieval_chain.ainvoke(modified_question)
+            answer = result
+            print(f"[{model_name}] Ответ {question_idx + 1}: {answer[:100]}..." if len(answer) > 100 else f"[{model_name}] Ответ {question_idx + 1}: {answer}")
+            
+            return {
+                "question": question,
+                "system_answer": answer,
+                "golden_answer": golden_answer
+            }
     
     # Создаем задачи для всех вопросов
     tasks = []
@@ -212,56 +199,44 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
     logger.info(f"Ответы системы сохранены в {system_responses_path}")
     
     # Оцениваем результаты
-    try:
-        # Используем асинхронную версию оценки для ускорения
-        # Используем EVAL_MODEL_NAME для оценки всех моделей
-        logger.info(f"Используем {EVAL_MODEL_NAME} для оценки ответов модели {model_name}")
-        evaluation_df = await evaluate_dataset_async(
-            dataset=dataset,
-            system_responses=system_responses,
-            model_name=EVAL_MODEL_NAME,  # Используем одну и ту же модель для оценки
-            temperature=TEMPERATURE,
-            limit=limit,
-            max_concurrency=6  # Лимит одновременных запросов к LLM для метрик
-        )
-        
-        # Генерируем отчет
-        report = generate_report(evaluation_df)
-        
-        # Сохраняем результаты и отчет
-        results_path = model_dir / "evaluation_results.csv"
-        save_results(evaluation_df, str(results_path), report)
-        
-        # Освобождаем ресурсы
-        stop_evaluation()
-        
-        # Дополнительная очистка памяти
-        import gc
-        import torch
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        gc.collect()
-        
-        elapsed_time = time.time() - start_time
-        logger.info(f"Оценка модели {model_name} завершена за {elapsed_time:.2f} секунд")
-        
-
-        
-        return {
-            "model": model_name,
-            "metrics": report,
-            "elapsed_time": elapsed_time,
-            "examples_count": len(dataset) if limit is None else min(len(dataset), limit)
-        }
-    except Exception as e:
-        logger.error(f"Ошибка при оценке результатов: {e}")
-        return {
-            "model": model_name,
-            "metrics": {},
-            "elapsed_time": time.time() - start_time,
-            "examples_count": len(dataset) if limit is None else min(len(dataset), limit),
-            "error": str(e)
-        }
+    # Используем асинхронную версию оценки для ускорения
+    # Используем EVAL_MODEL_NAME для оценки всех моделей
+    logger.info(f"Используем {EVAL_MODEL_NAME} для оценки ответов модели {model_name}")
+    evaluation_df = await evaluate_dataset_async(
+        dataset=dataset,
+        system_responses=system_responses,
+        model_name=EVAL_MODEL_NAME,  # Используем одну и ту же модель для оценки
+        temperature=TEMPERATURE,
+        limit=limit,
+        max_concurrency=6  # Лимит одновременных запросов к LLM для метрик
+    )
+    
+    # Генерируем отчет
+    report = generate_report(evaluation_df)
+    
+    # Сохраняем результаты и отчет
+    results_path = model_dir / "evaluation_results.csv"
+    save_results(evaluation_df, str(results_path), report)
+    
+    # Освобождаем ресурсы
+    stop_evaluation()
+    
+    # Дополнительная очистка памяти
+    import gc
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+    
+    elapsed_time = time.time() - start_time
+    logger.info(f"Оценка модели {model_name} завершена за {elapsed_time:.2f} секунд")
+    
+    return {
+        "model": model_name,
+        "metrics": report,
+        "elapsed_time": elapsed_time,
+        "examples_count": len(dataset) if limit is None else min(len(dataset), limit)
+    }
 
 async def run_evaluations(models, dataset, output_dir, limit, concurrency):
     """Запускает оценку нескольких моделей с ограничением параллелизма"""
@@ -297,12 +272,8 @@ async def main():
         }, f, indent=2)
     
     # Загружаем датасет
-    try:
-        dataset = pd.read_csv(TEST_DATASET_PATH)
-        logger.info(f"Загружен датасет с {len(dataset)} примерами")
-    except Exception as e:
-        logger.error(f"Ошибка при загрузке датасета: {e}")
-        return
+    dataset = pd.read_csv(TEST_DATASET_PATH)
+    logger.info(f"Загружен датасет с {len(dataset)} примерами")
     
     # 🚀 КРИТИЧЕСКАЯ ОПТИМИЗАЦИЯ: Предпосчитываем документы для всех вопросов
     logger.info("🔍 Начинаем предпосчёт релевантных документов для всех вопросов...")
@@ -348,11 +319,8 @@ async def main():
     _document_cache.clear()
     
     # Очищаем GPU память и реранкер
-    try:
-        from core.modules.ranking import cleanup_reranker
-        cleanup_reranker()
-    except:
-        pass
+    from core.modules.ranking import cleanup_reranker
+    cleanup_reranker()
     
     # Финальная очистка
     stop_evaluation()

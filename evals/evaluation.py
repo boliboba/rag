@@ -28,45 +28,35 @@ from deepeval.metrics import (
 @contextmanager
 def gpu_memory_manager():
     """Контекстный менеджер для управления GPU памятью"""
-    try:
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        yield
-    finally:
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-        gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    yield
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
 
 @lazy_singleton
 def get_bleurt_model():
     """Возвращает модель BLEURT для оценки текстовой генерации"""
-    try:
-        with gpu_memory_manager():
-            # Принудительно используем вторую GPU для BLEURT
-            device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
+    with gpu_memory_manager():
+        # Принудительно используем вторую GPU для BLEURT
+        device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
+        
+        model = BleurtForSequenceClassification.from_pretrained('lucadiliello/BLEURT-20')
+        model.eval()
+        
+        if torch.cuda.is_available():
+            # Устанавливаем ограничение памяти для BLEURT
+            if device == 'cuda:1':
+                torch.cuda.set_per_process_memory_fraction(0.5, device=1)
+            model = model.to(device)
             
-            model = BleurtForSequenceClassification.from_pretrained('lucadiliello/BLEURT-20')
-            model.eval()
-            
-            if torch.cuda.is_available():
-                # Устанавливаем ограничение памяти для BLEURT
-                if device == 'cuda:1':
-                    torch.cuda.set_per_process_memory_fraction(0.5, device=1)
-                model = model.to(device)
-                
-            return model
-    except Exception as e:
-        print(f"⚠️ Ошибка загрузки BLEURT: {e}")
-        return None
+        return model
 
 @lazy_singleton
 def get_bleurt_tokenizer():
     """Возвращает токенизатор для модели BLEURT"""
-    try:
-        return BleurtTokenizer.from_pretrained('lucadiliello/BLEURT-20')
-    except Exception as e:
-        print(f"⚠️ Ошибка загрузки токенизатора BLEURT: {e}")
-        return None
+    return BleurtTokenizer.from_pretrained('lucadiliello/BLEURT-20')
 
 def calculate_bleurt_score(references, candidates):
     """Рассчитывает BLEURT оценку между эталонными и кандидатными текстами"""
@@ -77,36 +67,31 @@ def calculate_bleurt_score(references, candidates):
         print("⚠️ BLEURT недоступен, возвращаем нулевые оценки")
         return [0.0] * len(references)
     
-    try:
-        with gpu_memory_manager():
-            with torch.no_grad():
-                # Batch processing для экономии памяти
-                batch_size = 8
-                all_scores = []
+    with gpu_memory_manager():
+        with torch.no_grad():
+            # Batch processing для экономии памяти
+            batch_size = 8
+            all_scores = []
+            
+            for i in range(0, len(references), batch_size):
+                batch_refs = references[i:i+batch_size]
+                batch_cands = candidates[i:i+batch_size]
                 
-                for i in range(0, len(references), batch_size):
-                    batch_refs = references[i:i+batch_size]
-                    batch_cands = candidates[i:i+batch_size]
-                    
-                    inputs = tokenizer(batch_refs, batch_cands, padding='longest', return_tensors='pt', truncation=True, max_length=512)
-                    
-                    # Определяем device модели
-                    device = next(model.parameters()).device
-                    inputs = {k: v.to(device) for k, v in inputs.items()}
-                    
-                    batch_scores = model(**inputs).logits.flatten().cpu().tolist()
-                    all_scores.extend(batch_scores)
-                    
-                    # Очищаем промежуточную память
-                    del inputs
-                    if torch.cuda.is_available():
-                        torch.cuda.empty_cache()
+                inputs = tokenizer(batch_refs, batch_cands, padding='longest', return_tensors='pt', truncation=True, max_length=512)
                 
-                return all_scores
+                # Определяем device модели
+                device = next(model.parameters()).device
+                inputs = {k: v.to(device) for k, v in inputs.items()}
                 
-    except Exception as e:
-        print(f"⚠️ Ошибка в BLEURT: {e}")
-        return [0.0] * len(references)
+                batch_scores = model(**inputs).logits.flatten().cpu().tolist()
+                all_scores.extend(batch_scores)
+                
+                # Очищаем промежуточную память
+                del inputs
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            
+            return all_scores
 
 def calculate_cosine_similarity(texts1, texts2):
     """Рассчитывает косинусную близость между двумя наборами текстов, используя эмбеддер из конфигурации"""
@@ -232,40 +217,26 @@ def generate_report(evaluated_df):
     stats = {}
     # Для каждой метрики вычисляем статистики
     for metric in metric_columns:
-        try:
-            scores = evaluated_df[metric].dropna().tolist()
-            if scores:
-                stats[metric] = {
-                    "mean": float(np.mean(scores)),
-                    "min": float(np.min(scores)),
-                    "max": float(np.max(scores)),
-                    "median": float(np.median(scores))
-                }
-        except Exception as e:
-            print(f"Ошибка при обработке метрики {metric}: {e}")
+        scores = evaluated_df[metric].dropna().tolist()
+        if scores:
             stats[metric] = {
-                "mean": 0.0,
-                "min": 0.0,
-                "max": 0.0,
-                "median": 0.0,
-                "error": str(e)
+                "mean": float(np.mean(scores)),
+                "min": float(np.min(scores)),
+                "max": float(np.max(scores)),
+                "median": float(np.median(scores))
             }
     
     # Добавляем статистику по средней оценке
-    try:
-        avg_scores = evaluated_df["avg_score"].dropna()
-        if len(avg_scores) > 0:
-            stats["avg_score"] = {
-                "mean": float(np.mean(avg_scores)),
-                "min": float(np.min(avg_scores)),
-                "max": float(np.max(avg_scores)),
-                "median": float(np.median(avg_scores))
-            }
-        else:
-            stats["avg_score"] = {"mean": 0.0, "min": 0.0, "max": 0.0, "median": 0.0}
-    except Exception as e:
-        print(f"Ошибка при обработке средней оценки: {e}")
-        stats["avg_score"] = {"mean": 0.0, "min": 0.0, "max": 0.0, "median": 0.0, "error": str(e)}
+    avg_scores = evaluated_df["avg_score"].dropna()
+    if len(avg_scores) > 0:
+        stats["avg_score"] = {
+            "mean": float(np.mean(avg_scores)),
+            "min": float(np.min(avg_scores)),
+            "max": float(np.max(avg_scores)),
+            "median": float(np.median(avg_scores))
+        }
+    else:
+        stats["avg_score"] = {"mean": 0.0, "min": 0.0, "max": 0.0, "median": 0.0}
     
     return stats
 
@@ -284,18 +255,8 @@ def save_results(dataset, output_path, report=None):
             f"{os.path.splitext(os.path.basename(output_path))[0]}_report.json"
         )
         
-        try:
-            with open(report_path, 'w', encoding='utf-8') as f:
-                json.dump(report, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            print(f"Ошибка при сохранении отчета в JSON: {e}")
-            # Попытка сохранить в более простом формате
-            fallback_path = os.path.join(
-                os.path.dirname(output_path), 
-                f"{os.path.splitext(os.path.basename(output_path))[0]}_report_fallback.txt"
-            )
-            with open(fallback_path, 'w', encoding='utf-8') as f:
-                f.write(str(report))
+        with open(report_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
 
 def stop():
     """Сбрасывает все синглтоны для освобождения ресурсов"""
