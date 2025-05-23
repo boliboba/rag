@@ -146,7 +146,7 @@ def create_test_cases(dataset, system_responses=None, limit=None):
     
     return test_cases
 
-def evaluate_dataset(dataset, system_responses=None, model_name=MODEL_NAME, temperature=0.0, limit=None):
+def evaluate_dataset(dataset, system_responses=None, model_name=MODEL_NAME, temperature=0.6, limit=None):
     # Создаем тестовые случаи в зависимости от наличия ответов системы
     test_cases = create_test_cases(dataset, system_responses, limit)
     eval_model = OpenRouterDeepEvalAdapter(model_name=model_name, temperature=temperature)
