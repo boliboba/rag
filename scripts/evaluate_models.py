@@ -48,8 +48,8 @@ MODELS_TO_EVALUATE = [
     "qwen/qwen3-235b-a22b", 
     "qwen/qwen3-32b", 
     "qwen/qwen3-14b",
-    "google/gemma-3-27b-it",
-    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it:free",
+    "google/gemma-3-12b-it:free",
     "meta-llama/llama-3.1-405b-instruct",
     "meta-llama/llama-3.3-70b-instruct",
     "meta-llama/llama-4-maverick",
@@ -208,7 +208,7 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         dataset=dataset,
         system_responses=system_responses,
         model_name=EVAL_MODEL_NAME,  # Используем одну и ту же модель для оценки
-        temperature=TEMPERATURE,
+        temperature=0.6,
         limit=limit,
         max_concurrency=6  # Лимит одновременных запросов к LLM для метрик
     )
