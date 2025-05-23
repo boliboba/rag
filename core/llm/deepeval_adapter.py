@@ -1,6 +1,8 @@
 from deepeval.models import DeepEvalBaseLLM
 from core.llm.models import ChatOpenRouter
 import json
+import instructor
+from openai import OpenAI
 
 
 class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
@@ -25,17 +27,53 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
     def load_model(self):
         return self.llm
     
-    def generate(self, prompt: str, schema) -> str:
+    def generate(self, prompt: str, schema=None) -> str:
         chat_model = self.load_model()
-        result = chat_model.with_structured_output(schema).invoke(prompt).content
-        json_result = json.loads(result)
-        return schema(**json_result)
+        
+        if schema:
+            # Используем OpenAI клиент с instructor для структурированного вывода
+            client = OpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=self.llm.openai_api_key,
+            )
+            client = instructor.from_openai(client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
+            
+            # Создаем структурированный вывод
+            result = client.chat.completions.create(
+                model=self.llm.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                response_model=schema,
+                extra_body={"provider": {"require_parameters": True}},
+            )
+            return result
+        else:
+            # Обычный вызов без схемы
+            return chat_model.invoke(prompt).content
 
-    async def a_generate(self, prompt: str, schema) -> str:
+    async def a_generate(self, prompt: str, schema=None) -> str:
         chat_model = self.load_model()
-        result = await chat_model.with_structured_output(schema).ainvoke(prompt)
-        json_result = json.loads(result.content)
-        return schema(**json_result)
+        
+        if schema:
+            # Используем AsyncOpenAI клиент с instructor для структурированного вывода
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=self.llm.openai_api_key,
+            )
+            client = instructor.from_openai(client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
+            
+            # Создаем структурированный вывод асинхронно
+            result = await client.chat.completions.create(
+                model=self.llm.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                response_model=schema,
+                extra_body={"provider": {"require_parameters": True}},
+            )
+            return result
+        else:
+            # Обычный асинхронный вызов без схемы
+            result = await chat_model.ainvoke(prompt)
+            return result.content
     
     def get_model_name(self):
         return f"OpenRouter-{self.llm.model_name}" 
