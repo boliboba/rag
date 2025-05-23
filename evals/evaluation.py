@@ -10,16 +10,6 @@ from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
 from bleurt_pytorch import BleurtForSequenceClassification, BleurtTokenizer
 
-# Добавляем импорты для работы с TPU
-try:
-    import torch_xla
-    import torch_xla.core.xla_model as xm
-    HAS_TPU = True
-    print("🚀 TPU доступен и будет использован для оценки")
-except ImportError:
-    HAS_TPU = False
-    print("⚠️ TPU не доступен для оценки, будет использована CPU/GPU")
-
 from core.config import MODEL_NAME
 from core.llm.deepeval_adapter import OpenRouterDeepEvalAdapter
 from core.llm.chains import split_docs
@@ -34,47 +24,31 @@ from deepeval.metrics import (
     GEval
 )
 
-# Функция для определения доступного устройства
-def get_device():
-    if HAS_TPU:
-        return xm.xla_device()
-    elif torch.cuda.is_available():
-        return torch.device("cuda")
-    else:
-        return torch.device("cpu")
-
 @contextmanager
 def gpu_memory_manager():
-    """Контекстный менеджер для управления GPU/TPU памятью"""
-    if HAS_TPU:
-        # Очистка TPU памяти
-        xm.mark_step()
-    elif torch.cuda.is_available():
+    """Контекстный менеджер для управления GPU памятью"""
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    
     yield
-    
-    if HAS_TPU:
-        # Очистка TPU памяти после операций
-        xm.mark_step()
-    elif torch.cuda.is_available():
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    
     gc.collect()
 
 @lazy_singleton
 def get_bleurt_model():
     """Возвращает модель BLEURT для оценки текстовой генерации"""
     with gpu_memory_manager():
-        device = get_device()
-        device_type = "TPU" if HAS_TPU else ("GPU" if torch.cuda.is_available() else "CPU")
-        print(f"Загружаем BLEURT модель на {device_type}")
+        # Принудительно используем вторую GPU для BLEURT
+        device = 'cuda:1' if torch.cuda.device_count() > 1 else ('cuda:0' if torch.cuda.is_available() else 'cpu')
         
         model = BleurtForSequenceClassification.from_pretrained('lucadiliello/BLEURT-20')
         model.eval()
         
-        # Перемещаем модель на соответствующее устройство
-        model = model.to(device)
+        if torch.cuda.is_available():
+            # Устанавливаем ограничение памяти для BLEURT
+            if device == 'cuda:1':
+                torch.cuda.set_per_process_memory_fraction(0.5, device=1)
+            model = model.to(device)
             
         return model
 
@@ -92,50 +66,28 @@ def calculate_bleurt_score(references, candidates):
         print("⚠️ BLEURT недоступен, возвращаем нулевые оценки")
         return [0.0] * len(references)
     
-    # Проверяем на пустые строки и заменяем их
-    processed_candidates = []
-    for i, candidate in enumerate(candidates):
-        if candidate is None or candidate == "":
-            processed_candidates.append("Нет ответа")
-            print(f"Предупреждение: Пустой ответ для BLEURT оценки #{i}, заменен на 'Нет ответа'")
-        else:
-            processed_candidates.append(candidate)
-    
     with gpu_memory_manager():
         with torch.no_grad():
-            # Определяем устройство
-            device = next(model.parameters()).device
-            
             # Batch processing для экономии памяти
             batch_size = 8
             all_scores = []
             
             for i in range(0, len(references), batch_size):
                 batch_refs = references[i:i+batch_size]
-                batch_cands = processed_candidates[i:i+batch_size]
+                batch_cands = candidates[i:i+batch_size]
                 
                 inputs = tokenizer(batch_refs, batch_cands, padding='longest', return_tensors='pt', truncation=True, max_length=512)
                 
-                # Перемещаем входные данные на устройство
+                # Определяем device модели
+                device = next(model.parameters()).device
                 inputs = {k: v.to(device) for k, v in inputs.items()}
                 
-                # Выполняем вывод
-                outputs = model(**inputs)
-                
-                # Если используется TPU, нужно синхронизировать
-                if HAS_TPU:
-                    batch_scores = xm.mesh_reduce('bleurt_scores', outputs.logits.flatten(), lambda x: x)
-                    batch_scores = batch_scores.cpu().tolist()
-                else:
-                    batch_scores = outputs.logits.flatten().cpu().tolist()
-                
+                batch_scores = model(**inputs).logits.flatten().cpu().tolist()
                 all_scores.extend(batch_scores)
                 
                 # Очищаем промежуточную память
-                del inputs, outputs
-                if HAS_TPU:
-                    xm.mark_step()
-                elif torch.cuda.is_available():
+                del inputs
+                if torch.cuda.is_available():
                     torch.cuda.empty_cache()
             
             return all_scores
@@ -145,27 +97,11 @@ def calculate_cosine_similarity(texts1, texts2):
     embedding_model = get_embedding_model()
     
     # Получаем эмбеддинги для обоих наборов текстов
-    embeddings1 = []
-    embeddings2 = []
-    similarities = []
+    embeddings1 = [embedding_model.embed_query(text) for text in texts1]
+    embeddings2 = [embedding_model.embed_query(text) for text in texts2]
     
-    for i, (text1, text2) in enumerate(zip(texts1, texts2)):
-        try:
-            # Проверяем на пустые строки
-            if text2 is None or text2 == "":
-                print(f"Предупреждение: Пустой ответ для косинусной оценки #{i}, возвращаем 0.0")
-                similarities.append(0.0)
-                continue
-                
-            emb1 = embedding_model.embed_query(text1)
-            emb2 = embedding_model.embed_query(text2)
-            
-            # Рассчитываем косинусную близость
-            similarity = cosine_similarity([emb1], [emb2])[0][0]
-            similarities.append(similarity)
-        except Exception as e:
-            print(f"Ошибка при расчете косинусной близости для примера #{i}: {e}")
-            similarities.append(0.0)
+    # Рассчитываем косинусную близость между соответствующими эмбеддингами
+    similarities = [cosine_similarity([emb1], [emb2])[0][0] for emb1, emb2 in zip(embeddings1, embeddings2)]
     
     return similarities
 
@@ -329,14 +265,9 @@ def stop():
     """Сбрасывает все синглтоны для освобождения ресурсов"""
     get_bleurt_model.reset()
     get_bleurt_tokenizer.reset()
-    
-    # Очищаем память в зависимости от устройства
-    if HAS_TPU:
-        xm.mark_step()
-    elif torch.cuda.is_available():
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    
-    gc.collect()
+    gc.collect() 
 
 async def calculate_bleurt_score_async(references, candidates):
     """Асинхронно рассчитывает BLEURT оценку между эталонными и кандидатными текстами"""

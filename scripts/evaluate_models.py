@@ -14,18 +14,6 @@ from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
 
-# Добавляем импорты для работы с TPU
-try:
-    import torch_xla
-    import torch_xla.core.xla_model as xm
-    import torch_xla.distributed.parallel_loader as pl
-    import torch_xla.distributed.xla_multiprocessing as xmp
-    HAS_TPU = True
-    print("🚀 TPU доступен и будет использован")
-except ImportError:
-    HAS_TPU = False
-    print("⚠️ TPU не доступен, будет использована CPU/GPU")
-
 from core.llm import get_llm
 from core.db import get_vector_store
 from core.llm.chains import get_retrieval_chain, format_docs, retrieve, rerank
@@ -86,15 +74,6 @@ MAX_CONCURRENCY = 6
 # Глобальный кэш для предпосчитанных документов
 _document_cache = {}
 
-# Функция для определения доступного устройства
-def get_device():
-    if HAS_TPU:
-        return xm.xla_device()
-    elif torch.cuda.is_available():
-        return torch.device("cuda")
-    else:
-        return torch.device("cpu")
-
 def precompute_documents_for_all_questions(dataset, limit=None):
     """Предпосчитывает релевантные документы для всех вопросов один раз"""
     if limit is not None and limit < len(dataset):
@@ -104,11 +83,6 @@ def precompute_documents_for_all_questions(dataset, limit=None):
     _document_cache.clear()
     
     print(f"🔍 Предпосчитываем документы для {len(dataset)} вопросов...")
-    
-    # Определяем устройство
-    device = get_device()
-    device_type = "TPU" if HAS_TPU else ("GPU" if torch.cuda.is_available() else "CPU")
-    print(f"🔧 Используется {device_type} для вычислений")
     
     for idx, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Предпосчёт документов")):
         question = row["question"]
@@ -254,15 +228,12 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
     # Освобождаем ресурсы
     stop_evaluation()
     
-    # Очистка памяти в зависимости от используемого устройства
+    # Дополнительная очистка памяти
     import gc
-    gc.collect()
-    
-    if HAS_TPU:
-        # Очистка TPU памяти
-        xm.mark_step()
-    elif torch.cuda.is_available():
+    import torch
+    if torch.cuda.is_available():
         torch.cuda.empty_cache()
+    gc.collect()
     
     elapsed_time = time.time() - start_time
     logger.info(f"Оценка модели {model_name} завершена за {elapsed_time:.2f} секунд")
@@ -296,9 +267,6 @@ async def main():
     output_dir = Path("./results") / f"eval_{timestamp}"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Определяем тип устройства для логов
-    device_type = "TPU" if HAS_TPU else ("GPU" if torch.cuda.is_available() else "CPU")
-    
     # Сохраняем параметры запуска
     with open(output_dir / "config.json", "w") as f:
         json.dump({
@@ -307,8 +275,7 @@ async def main():
             "temperature": TEMPERATURE,
             "dataset": TEST_DATASET_PATH,
             "limit": LIMIT,
-            "device": device_type,
-            "optimization": "precomputed_docs_tpu_optimized" if HAS_TPU else "precomputed_docs_gpu_optimized"
+            "optimization": "precomputed_docs_gpu_optimized"
         }, f, indent=2)
     
     # Загружаем датасет
@@ -358,23 +325,20 @@ async def main():
     global _document_cache
     _document_cache.clear()
     
-    # Очищаем память и реранкер в зависимости от устройства
+    # Очищаем GPU память и реранкер
     from core.modules.ranking import cleanup_reranker
     cleanup_reranker()
     
     # Финальная очистка
     stop_evaluation()
     import gc
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
     gc.collect()
     
-    if HAS_TPU:
-        # Очистка TPU памяти
-        xm.mark_step()
-    elif torch.cuda.is_available():
-        torch.cuda.empty_cache()
-    
     logger.info(f"🎉 Оценка завершена! Результаты сохранены в {output_dir}")
-    logger.info(f"📊 Обработано {len(MODELS_TO_EVALUATE)} моделей с оптимизированным алгоритмом для {device_type}")
+    logger.info(f"📊 Обработано {len(MODELS_TO_EVALUATE)} моделей с оптимизированным алгоритмом")
 
 if __name__ == "__main__":
     # Избегаем устаревшего предупреждения
