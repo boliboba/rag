@@ -2,7 +2,7 @@ from deepeval.models import DeepEvalBaseLLM
 import instructor
 from openai import OpenAI, AsyncOpenAI
 import os
-
+import json
 
 class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
     
@@ -40,7 +40,7 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
                     max_tokens=self.max_tokens,
                     extra_body={"provider": {"require_parameters": True}},
                 )
-            return result
+            return schema(**json.loads(result))
         except Exception as e:
             print(f"Ошибка при генерации ответа: {e}")
             return None
@@ -61,7 +61,7 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
                 max_tokens=self.max_tokens,
                 extra_body={"provider": {"require_parameters": True}},
                 )
-            return result
+            return schema(**json.loads(result))
         except Exception as e:
             print(f"Ошибка при генерации ответа: {e}")
             return None
