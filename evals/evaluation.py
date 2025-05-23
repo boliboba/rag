@@ -179,9 +179,13 @@ def evaluate_dataset(dataset, system_responses=None, model_name=MODEL_NAME, temp
     for i, test_case in enumerate(tqdm(test_cases, desc="Оценка примеров")):
         metric_scores = {}
         for metric in metrics:
-            metric.measure(test_case)
+            try:
+                metric.measure(test_case)
+                score = metric.score    
+            except Exception as e:
+                score = None
             metric_name = metric.__class__.__name__.replace("Metric", "")
-            metric_scores[metric_name] = metric.score
+            metric_scores[metric_name] = score
 
         # Добавляем BLEURT и косинусную оценки
         metric_scores["BLEURT"] = bleurt_scores[i]
