@@ -29,7 +29,7 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
         )
         return instructor.from_openai(client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
     
-    def generate(self, prompt: str, schema=None) -> str:
+    def generate(self, prompt: str, schema) -> str:
         client = self.load_model()
         result = client.chat.completions.create(
                 model=self.model_name,
@@ -41,7 +41,7 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
             )
         return result
 
-    async def a_generate(self, prompt: str, schema=None) -> str:
+    async def a_generate(self, prompt: str, schema) -> str:
         async_client = AsyncOpenAI(
             base_url=self.api_base,
             api_key=self.api_key,
