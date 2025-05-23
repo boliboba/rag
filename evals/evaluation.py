@@ -8,10 +8,9 @@ import gc
 from contextlib import contextmanager
 from tqdm import tqdm
 from sklearn.metrics.pairwise import cosine_similarity
-from bleurt_pytorch import BleurtConfig, BleurtForSequenceClassification, BleurtTokenizer
+from bleurt_pytorch import BleurtForSequenceClassification, BleurtTokenizer
 
-from core.llm import get_llm
-from core.config import MODEL_NAME, EMBEDDING_MODEL
+from core.config import MODEL_NAME
 from core.llm.deepeval_adapter import OpenRouterDeepEvalAdapter
 from core.llm.chains import split_docs
 from core.db import get_embedding_model
@@ -95,7 +94,7 @@ def calculate_bleurt_score(references, candidates):
 
 def calculate_cosine_similarity(texts1, texts2):
     """Рассчитывает косинусную близость между двумя наборами текстов, используя эмбеддер из конфигурации"""
-    embedding_model = get_embedding_model(model_name=EMBEDDING_MODEL)
+    embedding_model = get_embedding_model()
     
     # Получаем эмбеддинги для обоих наборов текстов
     embeddings1 = [embedding_model.embed_query(text) for text in texts1]

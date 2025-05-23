@@ -5,7 +5,7 @@ from tqdm import tqdm
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
-from core.config import INDEX_NAME, DATA_PATH, SEARCH_TOP_K, USE_RERANKER, RERANKER_TOP_K
+from core.config import INDEX_NAME, DATA_PATH, SEARCH_TOP_K, USE_RERANKER, RERANKER_TOP_K, EMBEDDING_MODEL
 from core.utils.singletons import lazy_singleton
 from core.modules.ranking import get_reranker, rerank_documents
 
@@ -21,7 +21,7 @@ def get_vector_store(index_path=None):
         return FAISS.from_documents([], embedding=get_embedding_model())
 
 @lazy_singleton
-def get_embedding_model(model_name="deepvk/USER-bge-m3"):
+def get_embedding_model(model_name=EMBEDDING_MODEL):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     return HuggingFaceEmbeddings(
@@ -48,7 +48,7 @@ def create_vectorstore(documents, embedding_model=None):
             
     return db
 
-def create_and_save_vectorstore(documents, output_path=None, model_name="deepvk/USER-bge-m3", device=None):
+def create_and_save_vectorstore(documents, output_path=None, model_name=EMBEDDING_MODEL, device=None):
     embedding_model = get_embedding_model(model_name)
     
     if len(documents) <= 1:
