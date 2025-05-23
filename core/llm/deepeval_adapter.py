@@ -24,13 +24,13 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
     def load_model(self):
         return self.llm
     
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, schema) -> str:
         chat_model = self.load_model()
-        return chat_model.invoke(prompt).content
+        return chat_model.with_structured_output(schema).invoke(prompt).content
 
-    async def a_generate(self, prompt: str) -> str:
+    async def a_generate(self, prompt: str, schema) -> str:
         chat_model = self.load_model()
-        res = await chat_model.ainvoke(prompt)
+        res = await chat_model.with_structured_output(schema).ainvoke(prompt)
         return res.content
     
     def get_model_name(self):
