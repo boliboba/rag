@@ -211,6 +211,11 @@ async def evaluate_model(model_name, dataset, output_dir, limit=None):
         max_concurrency=6  # Лимит одновременных запросов к LLM для метрик
     )
     
+    # Сохраняем сырые данные оценки
+    raw_evaluation_path = model_dir / "raw_evaluation.csv"
+    evaluation_df.to_csv(raw_evaluation_path, index=False)
+    logger.info(f"Сырые данные оценки сохранены в {raw_evaluation_path}")
+    
     # Генерируем отчет
     report = generate_report(evaluation_df)
     
