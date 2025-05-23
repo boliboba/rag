@@ -95,8 +95,9 @@ def retrieve(query, query_transformer=None, top_k=None):
     
     return get_top_k(transformed_query, vectorstore, k=top_k)
 
-def rerank(query, docs, top_k=None):
-    reranker = get_reranker()
+def rerank(query, docs, reranker=None, top_k=None):
+    if reranker is None:
+        reranker = get_reranker()
     if reranker:
         return_k = RERANKER_TOP_K if top_k is None else top_k
         return rerank_documents(query, docs, reranker, top_k=return_k)

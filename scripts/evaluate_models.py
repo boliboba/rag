@@ -84,30 +84,72 @@ def precompute_documents_for_all_questions(dataset, limit=None):
     
     print(f"🔍 Предпосчитываем документы для {len(dataset)} вопросов...")
     
-    for idx, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Предпосчёт документов")):
+    # Импортируем необходимые модули
+    from core.config import USE_RERANKER
+    import torch
+    import gc
+    
+    # Шаг 1: Сначала получаем все документы из векторной базы для всех вопросов
+    retrieval_results = {}
+    for idx, (_, row) in enumerate(tqdm(dataset.iterrows(), total=len(dataset), desc="Получение документов из векторной базы")):
         question = row["question"]
-        
         # Получаем документы из векторной базы
         docs = retrieve(question)
-        print(f"Найдено чанков: {len(docs)}")
+        retrieval_results[question] = docs
+        print(f"Вопрос {idx+1}: Найдено {len(docs)} чанков")
+    
+    # Освобождаем память после ретривера
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+    print("🧹 Память очищена после работы ретривера")
+    
+    # Шаг 2: Если включен реранкер, применяем его последовательно
+    if USE_RERANKER:
+        print("🔄 Применяем реранкер к полученным документам...")
         
-        # Проверяем настройку реранкера
-        from core.config import USE_RERANKER
-        if USE_RERANKER:
+        # Загружаем реранкер только один раз
+        from core.modules.ranking import get_reranker
+        reranker = get_reranker()
+        
+        for idx, (question, docs) in enumerate(tqdm(retrieval_results.items(), desc="Реранжирование документов")):
             # ВКЛЮЧАЕМ РЕРАНКЕР для качественного отбора документов
-            reranked_docs = rerank(question, docs)
-            print(f"Реранжировано чанков: {len(reranked_docs)}")
-            final_docs = reranked_docs
-        else:
-            # Реранкер отключен - берём топ-5 без реранжирования
+            reranked_docs = rerank(question, docs, reranker=reranker)
+            print(f"Вопрос {idx+1}: Реранжировано {len(reranked_docs)} документов")
+            
+            # Форматируем контекст
+            formatted_context = format_docs(reranked_docs)
+            
+            # Кэшируем результат
+            _document_cache[question] = formatted_context
+            
+            # Очищаем промежуточные данные
+            del docs
+            del reranked_docs
+            
+            # Периодически очищаем память (каждые 10 вопросов)
+            if idx % 10 == 0 and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                gc.collect()
+        
+        # Очищаем реранкер из памяти
+        from core.modules.ranking import cleanup_reranker
+        cleanup_reranker()
+    else:
+        # Реранкер отключен - берём топ-5 без реранжирования
+        print("⚠️ Реранкер отключен - используем топ-5 документов без реранжирования")
+        for question, docs in tqdm(retrieval_results.items(), desc="Форматирование документов"):
             final_docs = docs[:5] if len(docs) > 5 else docs
-            print(f"Реранкер отключен - взято {len(final_docs)} документов без реранжирования")
-        
-        # Форматируем контекст
-        formatted_context = format_docs(final_docs)
-        
-        # Кэшируем результат
-        _document_cache[question] = formatted_context
+            formatted_context = format_docs(final_docs)
+            _document_cache[question] = formatted_context
+    
+    # Финальная очистка памяти
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    gc.collect()
+    
+    # Очищаем промежуточные данные
+    del retrieval_results
     
     print(f"✅ Предпосчёт завершён! Сохранено {len(_document_cache)} контекстов")
     return dataset
