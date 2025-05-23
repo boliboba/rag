@@ -30,33 +30,41 @@ class OpenRouterDeepEvalAdapter(DeepEvalBaseLLM):
         return instructor.from_openai(client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
     
     def generate(self, prompt: str, schema) -> str:
-        client = self.load_model()
-        result = client.chat.completions.create(
+        try:
+            client = self.load_model()
+            result = client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[{"role": "user", "content": prompt}],
+                    response_model=schema,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    extra_body={"provider": {"require_parameters": True}},
+                )
+            return result
+        except Exception as e:
+            print(f"Ошибка при генерации ответа: {e}")
+            return None
+
+    async def a_generate(self, prompt: str, schema) -> str:
+        try:
+            async_client = AsyncOpenAI(
+                base_url=self.api_base,
+                api_key=self.api_key,
+            )
+            async_client = instructor.from_openai(async_client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
+
+            result = await async_client.chat.completions.create(
                 model=self.model_name,
                 messages=[{"role": "user", "content": prompt}],
                 response_model=schema,
                 temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 extra_body={"provider": {"require_parameters": True}},
-            )
-        return result
-
-    async def a_generate(self, prompt: str, schema) -> str:
-        async_client = AsyncOpenAI(
-            base_url=self.api_base,
-            api_key=self.api_key,
-        )
-        async_client = instructor.from_openai(async_client, mode=instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS)
-
-        result = await async_client.chat.completions.create(
-            model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
-            response_model=schema,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            extra_body={"provider": {"require_parameters": True}},
-        )
-        return result
+                )
+            return result
+        except Exception as e:
+            print(f"Ошибка при генерации ответа: {e}")
+            return None
     
     def get_model_name(self):
         return f"OpenRouter-{self.model_name}" 
