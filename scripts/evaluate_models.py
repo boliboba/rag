@@ -66,7 +66,7 @@ EVAL_MODEL_NAME = "google/gemini-2.5-flash-preview-05-20"
 TEST_DATASET_PATH = "data/filtered_evaluated_dataset.csv"
 
 # Количество примеров для оценки (None для всего датасета)
-LIMIT = 1
+LIMIT = 20
 
 # Максимальное количество одновременно оцениваемых моделей
 MAX_CONCURRENCY = 6
